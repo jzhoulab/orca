@@ -1,0 +1,27 @@
+name: orca_env
+channels:
+- anaconda
+- bioconda
+- conda-forge
+- defaults
+dependencies:
+- pyranges
+- cooler
+- cooltools
+- pyfaidx
+- pybigwig
+- cython
+- click
+- docopt
+- h5py
+- pandas
+- pyyaml
+- scikit-learn
+- scipy
+- statsmodels
+- pytabix
+- matplotlib
+- python
+- numpy
+- plotly
+- seaborn
