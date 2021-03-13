@@ -1,28 +1,30 @@
-![Alt text| top | 200x0](./1615252690323.png)
-## Orca
 
+<p align="center">
+  <img  height="150" src="https://github.com/jzhoulab/orca/blob/main/docs/source/orca_logo.png">
+</p>
 
+# Orca
 
 This repository contains code for Orca, a deep learning sequence modeling framework for multiscale genome structure prediction. Orca can **predict genome interactions from kilobase to whole-chromosome-scales** using only genomic sequence as input (4k resolution - 1Mb max distance to 1024kb resolution, 256Mb max distance).  
 
 This is our main repository for Orca, including code for applying Orca models or training new models. For reproducing the analyses in our manuscript,  please visit our manuscript repository (github).  A GPU-backed webserver for running the core functionalities of Orca is also available at: orca.zhoulab.io.
 
-#### What can I use Orca for?
+### What can I use Orca for?
 
 -  Predict the genome structural impacts of any genome variant, including large structural variants of almost any size (the maximum input size 256Mb, which is larger than the largest human chromosome).  
 -  Predict the genome 3D structure from any human genome sequence,  which means you can introduce multiple variants,  haplotypes, an entire assembled genome,  or any sequence you wish to perform an in silico Hi-C experiment on. 
 -   Analyze sequence dependencies of genome 3D structure by performing virtual genetic screens.  Orca sequence models can serve as an “in silico genome observatory” that allows designing and performing virtual genetic screens to probe the sequence basis of genome 3D organization.
 
 
-####  What is Orca?
+###  What is Orca?
 
 Orca is a deep learning sequence modeling framework for multiscale genome interaction prediction. Orca models are trained on high-resolution micro-C datasets for H1-ESC and HFF cell lines (and a cohesin-depleted HCT116 Hi-C model for the analysis of sequence dependencies of chromatin compartments). If you have sufficient computational resources including GPUs,  you can also train your own models on Hi-C type data given any cooler format input following our examples (see the training section).
 ![Alt text](./1615252623798.png)
 
-#### Get started 
+### Get started 
 If you just need predictions on one or a handful of variants, we have provided the core functionalities on a web server: orca.zhoulab.io. 
 
-##### Installation
+#### Installation
 For running Orca locally,  clone this repository and download the necessary resources with the following 
 command.
 ```bash
@@ -36,12 +38,12 @@ git checkout custom_target_support
 python setup.py build_ext --inplace
 python setup.py install 
 ```
-##### Download model and relevant resource files
+#### Download model and relevant resource files
 Next, download the model and other resource files needed by Orca. Because these files are large and some are optional, we packaged into several files and you can download what you need (some functionalities may not be available if the relevant files are not downloaded).  
 
 The minimal resource package for running Orca are packaged [here](),  which includes the Orca models and the  hg38 reference genome. It is also recommended to download the preprocessed micro-C datasets binned to the resolutions that Orca use,  which will allow for comparisons with observed data, from [here](). In addition, if you would like to generate chromatin tracks visualizations,  you can download these files [here](). 
 
-##### Basic Usage
+#### Basic Usage
 
 You can use Orca through either the command-line-interface (CLI) which supports most of the core functionalities or access the full capabilities through python. You can jump to the [CLI](#orca-command-line-interface-cli) if you wish to just use the CLI.  
 
@@ -75,7 +77,7 @@ outputs = process_dup('chr17', 70845859, 71884859, hg38, window_radius=128000000
 #of course you can also predict any genomic region
 outputs = process_region('chr9', 110404000, 111404000, hg38, window_radius=16000000, file='./chr17_110404000_111404000')
 ```
-#####  Usage - complex variants
+####  Usage - complex variants
 You can also specify more complex variants than the above types, using the custom variant function (here we specify a simple two-segment variant, but it can be used to specify complex variants with an arbitrary number of segments)
 ```
 _ = process_custom([['chr5', 89411065, 89411065+16000000, '-'],
@@ -102,7 +104,7 @@ outputs = genomepredict_256Mb(Genome.sequence_to_encoding(sequence), chrom, norm
 
 For full information about using Orca,  you may visit our API documentation page (http://jzhoulab.github.io/orca_docs).
 
-##### Orca Command-line Interface (CLI)
+#### Orca Command-line Interface (CLI)
 For prediction of multiscale interactions for genomic regions,  structural variant of deletion, duplication, inversion, and translocation with single junctions,  you can use the command line interface orca_predict.py and the output includes graphical visualizations in pdf format and numerical results saved in pytorch serialization format. 
 
 ```docs
@@ -132,7 +134,7 @@ If the function that you needed is not available from the CLI,  you can use the 
 
 
 
-#### Example output
+### Example output
 
 As an example output, we showed example visualizations generated for the prediction of duplication variant effects here.  For structural variant prediction, Orca generates multiple files that each contains a series of multi-level predictions zooming into a breakpoint of the variant, or the corresponding position(s) of the breakpoint in the reference sequence.
 
@@ -147,13 +149,13 @@ Example alternative sequence predictions for duplication variant (right boundary
 
 If you ask Orca to generate gene annotations or chromatin tracks,  you will also find annotation pdf outputs files which correspond to the same multi-level regions the genome interaction predictions are made on.
 
-#### Train Orca models
+### Train Orca models
 
 If you have set up Orca with its dependencies and has the necessary GPU resources (we have only done training on 4x V100 32Gb servers), you can train new models following the example code under the `train` directory to train new Orca models.  
 
 For training Orca models,  you will need at minimum only a mcool file processed to multiple resolutions including at least 1000, 4000, and, 32000; you can use `cooler zoomify`).  Each model is trained in three stages (1Mb module, 1-32Mb module, 32-256Mb module), corresponding to the three python files. You can refer to the `train/README.md` file for more details of training.  Note that the training process does require significant computing resources and time.
 
-#### Q&A
+### Q&A
 - Error when running the code in CPU mode?
 If you have a cuda-capable device but choose to run in the CPU mode,  this can generate a error from torch.DataParallel module. You can fix this by running the code with ```CUDA_VISIBLE_DEVICES= python ...```
 
@@ -163,8 +165,6 @@ You can access these datasets with 4DN accession IDs 4DNFI9GMP2J8 (H1-ESC;  Krie
 - How much resource do I need to run the model locally?
 It depends on your application. If you only need predictions for a few variants,  or if you only need the 1Mb model, CPU may be enough. If you need to predict more than a couple of dozens, of variant, then GPU is highly recommended (>8GB RAM needed).
 
-- How much resource do I need to train the model?
-Training the model requires GPU. We use 4x V100 GPUs and recommend at least 300GB of memory for parallelized on-the-fly data sampling.  For the Orca models. a complete three-stage training took ~2 months on 4x V100 with each stage taking ~20 days. 
 
-#### Questions and feedbacks
+### Questions and feedbacks
 Thank you very much for using Orca. If you have any question or feedback, you can let us know at orca-user@googlegroups.com. If you found a bug, you can file a Github issue with details for reproducing the bug.
