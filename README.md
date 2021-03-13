@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img  height="150" src="https://github.com/jzhoulab/orca/blob/main/docs/source/orca_logo.png">
+  <img  height="140" src="https://github.com/jzhoulab/orca/blob/main/docs/source/orca_logo.png">
 </p>
 
 # Orca
@@ -19,7 +19,9 @@ This is our main repository for Orca, including code for applying Orca models or
 ###  What is Orca?
 
 Orca is a deep learning sequence modeling framework for multiscale genome interaction prediction. Orca models are trained on high-resolution micro-C datasets for H1-ESC and HFF cell lines (and a cohesin-depleted HCT116 Hi-C model for the analysis of sequence dependencies of chromatin compartments). If you have sufficient computational resources including GPUs,  you can also train your own models on Hi-C type data given any cooler format input following our examples (see the training section).
-![Alt text](./1615252623798.png)
+<p align="center">
+  <img  src="https://github.com/jzhoulab/orca/blob/main/docs/source/orca_diagram.png">
+</p>
 
 ### Get started 
 If you just need predictions on one or a handful of variants, we have provided the core functionalities on a web server: orca.zhoulab.io. 
@@ -141,11 +143,15 @@ As an example output, we showed example visualizations generated for the predict
 The positions of the variant boundaries are be annotated on the left side of each plot. For reference sequence, we also show the micro-C data for comparison.
 
 Example reference sequence predictions for duplication variant (breakpoint): 
-![Alt text](./1615356866136.png)
+<p align="center">
+  <img  src="https://github.com/jzhoulab/orca/blob/main/docs/source/sv_pred_revsexdup_ref_r.png">
+</p>
 
 
 Example alternative sequence predictions for duplication variant (right boundary): 
-![Alt text](./1615356816337.png)
+<p align="center">
+  <img  src="https://github.com/jzhoulab/orca/blob/main/docs/source/sv_pred_revsexdup_alt.png">
+</p>
 
 If you ask Orca to generate gene annotations or chromatin tracks,  you will also find annotation pdf outputs files which correspond to the same multi-level regions the genome interaction predictions are made on.
 
