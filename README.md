@@ -5,7 +5,7 @@
 
 # Orca
 
-This repository contains code for Orca, a deep learning sequence modeling framework for multiscale genome structure prediction. Orca can **predict genome interactions from kilobase to whole-chromosome-scales** using only genomic sequence as input (4k resolution - 1Mb max distance to 1024kb resolution, 256Mb max distance).  
+This repository contains code for Orca, a deep learning sequence modeling framework for multiscale genome structure prediction. Orca can **predict genome interactions from kilobase to whole-chromosome-scales** using only genomic sequence as input (4k resolution, 1Mb max distance to 1024kb resolution, 256Mb max distance).  
 
 This is our main repository for Orca, including code for applying Orca models or training new models. For reproducing the analyses in our manuscript,  please visit our manuscript repository (github).  A GPU-backed webserver for running the core functionalities of Orca is also available at: orca.zhoulab.io.
 
