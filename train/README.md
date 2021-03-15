@@ -1,0 +1,9 @@
+This directory provide scripts for training Orca models. Overall the training process has three stages (1Mb, 1-32Mb, 32-256Mb).
+
+For training Orca models, the minimal requirement is only a mcool file with resolutions including 1000, 4000, 32000 (you can use cooler zoomify to generate different resolution). You can optionally supply chromatin annotation tracks, such as CTCF binding sites, DHS sites, and histone marks to simutaneously train the sequence encoding to predict those tracks (note that these tracks are used as auxiliary prediction targets for training the encoder, but are never used as input to the models).
+
+The mcool files used for training released Orca models are included in the mcool resource file (see README of this repository).
+
+To speed up genome sequence retrieval, the training scripts use a memory-mapped genome file. Run `python misc/make_genome_memmap.py` before you use the training scripts (47Gb space needed). The generated memmap file will also be automatically used by the orce_predict module and speed up these functions too.
+
+The training scripts ending with `_a`, `_b`, `_c` correspond to the first, second, and third stages. In the second and third stage training scripts, the path to the models trained by the previous stage need to be specified.  Note that the training files do not have an exit condition so it will keep on training until you terminate it (the updated model files will be saved periodically). Note the training took time. For reproducing our training schedule, with a 4x V100 server, the first stage training took 30 days, with the last 10 days trained with `--swa` option with the stochastic weight averaging (total ~480000 steps). The second stage training took 20 days (~150000 steps), and the third stage took 20 days (~36000 steps).
