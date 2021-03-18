@@ -23,7 +23,7 @@ torch.set_default_tensor_type("torch.FloatTensor")
 os.makedirs("./models/", exist_ok=True)
 os.makedirs("./png/", exist_ok=True)
 
-MODELA_PATH = "./models/model_hctnoc_a_swa.checkpoint"
+MODELA_PATH = "./models/model_hctnoc_a.checkpoint"
 if __name__ == "__main__":
 
     smooth_diag = np.load(
