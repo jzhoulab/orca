@@ -24,7 +24,7 @@ Orca is a deep learning sequence modeling framework for multiscale genome intera
 </p>
 
 ### Get started 
-If you just need predictions on one or a handful of variants, we have provided the core functionalities on a web server: [orca.zhoulab.io](https://orca.zhoulab.io). 
+If you just need predictions for one or a handful of variants, we have provided the core functionalities on a web server: [orca.zhoulab.io](https://orca.zhoulab.io). 
 
 #### Installation
 For running Orca locally,  clone this repository and download the necessary resources with the following 
