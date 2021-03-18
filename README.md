@@ -166,7 +166,7 @@ For training Orca models,  you will need at minimum only a mcool file processed 
 If you have a cuda-capable device but choose to run in the CPU mode,  this can generate a error from torch.DataParallel module. You can fix this by running the code with ```CUDA_VISIBLE_DEVICES= python ...```
 
 - Which datasets are Orca trained on?
-You can access these datasets with 4DN accession IDs 4DNFI9GMP2J8 (H1-ESC;  Krietenstein et al. 2020), 4DNFI643OYP9 (HFF; Krietenstein et al. 2020),  4DNFILP99QJS (cohesin-depleted HCT116; Rao et al. 2017). 
+You can access these datasets with 4DN accession IDs 4DNFI9GMP2J8 (H1-ESC;  Krietenstein et al. 2020), 4DNFI643OYP9 (HFF; Krietenstein et al. 2020),  4DNFILP99QJS (cohesin-depleted HCT116; Rao et al. 2017). We thank the authors of these high-quality datasets.
 
 - How much resource do I need to run the model locally?
 It depends on your application. If you only need predictions for a few variants,  or if you only need the 1Mb model, CPU may be enough. If you need to predict more than a couple of dozens, of variant, then GPU is highly recommended (>8GB RAM needed).
