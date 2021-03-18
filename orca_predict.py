@@ -794,19 +794,34 @@ def genomepredict_256Mb(
 
 
 def _retrieve_multi(regionlist, genome, target=True, normmat=True, normmat_regionlist=None):
-    sequences = [
-        genome.get_encoding_from_coords(chrom, start, end, strand)
-        for chrom, start, end, strand in regionlist
-    ]
+    sequences = []
+    for region in regionlist:
+        if len(region) == 4:
+            chrom, start, end, strand = region
+            sequences.append(genome.get_encoding_from_coords(chrom, start, end, strand))
+        else:
+            chrom, start, end = region
+            sequences.append(genome.get_encoding_from_coords(chrom, start, end, "+"))
+
     sequence = np.vstack(sequences)[None, :, :]
 
     if target and target_available:
         targets_h1esc = []
         targets_hff = []
-        for chrom, start, end, strand in regionlist:
+        for region in regionlist:
+            if len(region) == 4:
+                chrom, start, end, strand = region
+            else:
+                chrom, start, end = region
+                strand = "+"
             th1esc = []
             thff = []
-            for chrom2, start2, end2, strand2 in regionlist:
+            for region2 in regionlist:
+                if len(region2) == 4:
+                    chrom2, start2, end2, strand2 = region2
+                else:
+                    chrom2, start2, end2 = region2
+                    strand = "+"
                 th1esc.append(
                     target_h1esc_256m.get_feature_data(
                         chrom, start, end, chrom2=chrom2, start2=start2, end2=end2
@@ -993,7 +1008,7 @@ def process_region(
             "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
         )
 
-    if mstart - mend < 2*window_radius:
+    if mstart - mend < 2 * window_radius:
         anno_scaled = process_anno(
             [
                 [

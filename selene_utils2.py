@@ -775,11 +775,15 @@ class RandomPositionsSamplerHiC(OnlineSampler):
                 indices=indices, weights=weights
             )
 
-    def _retrieve_multi(self, chroms, starts, ends, strands):
+    def _retrieve_multi(self, chroms, starts, ends, strands=None):
         retrieved_seqs = []
         if self.target_1d:
             retrieved_1ds = []
-        for chrom, start, end, strand in zip(chroms, starts, ends, strands):
+        for i, (chrom, start, end) in enumerate(zip(chroms, starts, ends)):
+            if strands is not None:
+                strand = strands[i]
+            else:
+                strand = "+"
             if self.random_shift > 0:
                 r = np.random.randint(-self.random_shift, self.random_shift)
             else:
@@ -799,11 +803,19 @@ class RandomPositionsSamplerHiC(OnlineSampler):
         retrieved_targets = []
         if self.bg:
             background_targets = []
-        for chrom, start, end, strand in zip(chroms, starts, ends, strands):
+        for i, (chrom, start, end) in enumerate(zip(chroms, starts, ends)):
+            if strands is not None:
+                strand = strands[i]
+            else:
+                strand = "+"
             retrieved_targets_row = []
             if self.bg:
                 background_targets_row = []
-            for chrom2, start2, end2, strand2 in zip(chroms, starts, ends, strands):
+            for j, (chrom2, start2, end2) in enumerate(zip(chroms, starts, ends)):
+                if strands is not None:
+                    strand2 = strands[j]
+                else:
+                    strand2 = "+"
                 retrieved_target = self.target.get_feature_data(
                     chrom, start, end, chrom2=chrom2, start2=start2, end2=end2
                 )
