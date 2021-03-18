@@ -32,7 +32,7 @@ command.
 ```bash
 git clone
 ```
-Install python dependencies of Orca and Selene.  You can set up a conda env with `conda env create -f orca_env.yml` or install these packages manually to your environment.  Then,  install pytorch according to [here](https://pytorch.org/get-started/locally/ ).  Finally, install Selene with the commands below - right now we depend on a development branch of Selene with added support for custom targets:  
+Install python dependencies of Orca and Selene.  You can set up a conda env with `conda env create -f orca_env.yml` or install these packages manually to your environment.  Then,  install pytorch(>=1.7.0) according to [here](https://pytorch.org/get-started/locally/ ).  Finally, install Selene with the commands below - right now we depend on a development branch of Selene with added support for custom targets:  
 ```bash
 git clone https://github.com/kathyxchen/selene.git
 cd selene
