@@ -7,7 +7,7 @@
 
 This repository contains code for Orca, a deep learning sequence modeling framework for multiscale genome structure prediction. Orca can **predict genome interactions from kilobase to whole-chromosome-scales** using only genomic sequence as input.  
 
-This is our main repository for Orca, including code for applying Orca models or training new models. For reproducing the analyses in our manuscript,  please visit our manuscript repository (github).  A GPU-backed webserver for running the core functionalities of Orca is also available at: [orca.zhoulab.io](https://orca.zhoulab.io).
+This is our main repository for Orca, including code for applying Orca models or training new models. For reproducing the analyses in our manuscript,  please visit our manuscript [repository](https://github.com/jzhoulab/orca_manuscript).  A GPU-backed webserver for running the core functionalities of Orca is also available at: [orca.zhoulab.io](https://orca.zhoulab.io).
 
 ### What can I use Orca for?
 
@@ -24,13 +24,14 @@ Orca is a deep learning sequence modeling framework for multiscale genome intera
 </p>
 
 ### Get started 
-If you just need predictions on one or a handful of variants, we have provided the core functionalities on a web server: [orca.zhoulab.io](https://orca.zhoulab.io). 
+If you just need predictions for one or a handful of variants, we have provided the core functionalities on a web server: [orca.zhoulab.io](https://orca.zhoulab.io). 
 
 #### Installation
 For running Orca locally,  clone this repository and download the necessary resources with the following 
 command.
 ```bash
-git clone
+git clone https://github.com/jzhoulab/orca.git
+cd orca
 ```
 Install python dependencies of Orca and Selene.  You can set up a conda env with `conda env create -f orca_env.yml` or install these packages manually to your environment.  Then,  install pytorch(>=1.7.0) according to [here](https://pytorch.org/get-started/locally/ ).  Finally, install Selene with the commands below - right now we depend on a development branch of Selene with added support for custom targets:  
 ```bash
@@ -43,7 +44,16 @@ python setup.py install
 #### Download model and relevant resource files
 Next, download the model and other resource files needed by Orca. Because these files are large and some are optional, we packaged into several files and you can download what you need (some functionalities may not be available if the relevant files are not downloaded).  
 
-The minimal resource package for running Orca are packaged [here](),  which includes the Orca models and the  hg38 reference genome. It is also recommended to download the preprocessed micro-C datasets binned to the resolutions that Orca use,  which will allow for comparisons with observed data, from [here](). In addition, if you would like to generate chromatin tracks visualizations,  you can download these files [here](). 
+The minimal resource package for running Orca are packaged [here](https://zenodo.org/record/4594207/files/resources_core.tar.gz),  which includes the Orca models and the  hg38 reference genome. It is also recommended to download the preprocessed micro-C datasets binned to the resolutions that Orca use,  which will allow for comparisons with observed data, from [here](https://zenodo.org/record/4594207/files/resources_mcools.tar.gz). In addition, if you would like to generate chromatin tracks visualizations,  you can download these files [here](https://zenodo.org/record/4594676/files/resources_extra.tar.gz). To download and extract all resource files, you can run the following commands under the orca directory.
+
+```bash
+wget https://zenodo.org/record/4594207/files/resources_core.tar.gz
+wget https://zenodo.org/record/4594207/files/resources_mcools.tar.gz
+wget https://zenodo.org/record/4594676/files/resources_extra.tar.gz
+tar xf resources_core.tar.gz
+tar xf resources_mcools.tar.gz
+tar xf resources_extra.tar.gz
+```
 
 #### Basic Usage
 
@@ -166,7 +176,7 @@ For training Orca models,  you will need at minimum only a mcool file processed 
 If you have a cuda-capable device but choose to run in the CPU mode,  this can generate a error from torch.DataParallel module. You can fix this by running the code with ```CUDA_VISIBLE_DEVICES= python ...```
 
 - Which datasets are Orca trained on?
-You can access these datasets with 4DN accession IDs 4DNFI9GMP2J8 (H1-ESC;  Krietenstein et al. 2020), 4DNFI643OYP9 (HFF; Krietenstein et al. 2020),  4DNFILP99QJS (cohesin-depleted HCT116; Rao et al. 2017). 
+You can access these datasets with 4DN accession IDs 4DNFI9GMP2J8 (H1-ESC;  Krietenstein et al. 2020), 4DNFI643OYP9 (HFF; Krietenstein et al. 2020),  4DNFILP99QJS (cohesin-depleted HCT116; Rao et al. 2017). We thank the authors of these high-quality datasets.
 
 - How much resource do I need to run the model locally?
 It depends on your application. If you only need predictions for a few variants,  or if you only need the 1Mb model, CPU may be enough. If you need to predict more than a couple of dozens, of variant, then GPU is highly recommended (>8GB RAM needed).
