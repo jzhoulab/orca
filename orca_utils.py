@@ -733,8 +733,7 @@ def genomeplot_256Mb(
             va="center",
         )
 
-    current_row = 0
-    for ii, ax in enumerate(reversed(all_axes[current_row])):
+    def _plot_pred(ii, ax, model_i, key="predictions", maskpred=False):
         s = int(output["start_coords"][ii])
         e = int(output["end_coords"][ii])
         padlen = int(output["start_coords"][ii] + 256000000 / 2 ** (ii)) - e
@@ -755,7 +754,7 @@ def genomeplot_256Mb(
         if show_coordinates:
             ax.set_title(regionstr, fontsize=14, pad=4)
         if unscaled:
-            plotmat = output["predictions"][0][ii] + np.log(output["normmats"][0][ii])
+            plotmat = output[key][model_i][ii] + np.log(output["normmats"][model_i][ii])
             im = ax.imshow(
                 plotmat,
                 interpolation="none",
@@ -763,8 +762,9 @@ def genomeplot_256Mb(
                 vmax=np.max(np.diag(plotmat, k=1)),
             )
         else:
-            plotmat = output["predictions"][0][ii]
+            plotmat = output[key][model_i][ii]
             im = ax.imshow(plotmat, interpolation="none", cmap=cmap, vmin=vmin, vmax=vmax)
+
         if padlen > 0:
             # draw chr boundary
             chrlen_ratio = 1 - padlen / (256000000 / 2 ** (ii))
@@ -796,128 +796,25 @@ def genomeplot_256Mb(
                 ax.imshow(
                     np.isnan(output["experiments"][0][ii]), interpolation="none", cmap=bwcmap,
                 )
+        return im
+
+    current_row = 0
+    for ii, ax in enumerate(reversed(all_axes[current_row])):
+        im = _plot_pred(ii, ax, 0, key="predictions", maskpred=maskpred)
 
     current_row += 1
-
     if output["experiments"]:
         for ii, ax in enumerate(reversed(all_axes[current_row])):
-            s = int(output["start_coords"][ii])
-            e = int(output["end_coords"][ii])
-            padlen = int(output["start_coords"][ii] + 256000000 / 2 ** (ii)) - e
-            if padlen > 0 and output["padding_chr"] is not None:
-                regionstr = (
-                    output["chr"]
-                    + ":"
-                    + str(s)
-                    + "-"
-                    + str(e)
-                    + "; "
-                    + output["padding_chr"]
-                    + ":0-"
-                    + str(padlen)
-                )
-            else:
-                regionstr = output["chr"] + ":" + str(s) + "-" + str(e)
-            if show_coordinates:
-                ax.set_title(regionstr, fontsize=14, pad=4)
-            if unscaled:
-                plotmat = output["experiments"][0][ii] + np.log(output["normmats"][0][ii])
-                im = ax.imshow(
-                    plotmat,
-                    interpolation="none",
-                    cmap=unscaled_cmap,
-                    vmax=np.max(np.diag(plotmat, k=1)),
-                )
-            else:
-                plotmat = output["experiments"][0][ii]
-                im = ax.imshow(plotmat, interpolation="none", cmap=cmap, vmin=vmin, vmax=vmax)
-            if padlen > 0:
-                # draw chr boundary
-                chrlen_ratio = 1 - padlen / (256000000 / 2 ** (ii))
-                ax.plot(
-                    [chrlen_ratio * 250 + 0.5, chrlen_ratio * 250 + 0.5],
-                    [-0.5, 250.5],
-                    color="black",
-                    linewidth=0.2,
-                    zorder=10,
-                )
-                ax.plot(
-                    [-0.5, 250.5],
-                    [chrlen_ratio * 250 + 0.5, chrlen_ratio * 250 + 0.5],
-                    color="black",
-                    linewidth=0.2,
-                    zorder=10,
-                )
-            if output["annos"]:
-                for r in output["annos"][ii]:
-                    if len(r) == 3:
-                        _draw_region(ax, r[0], r[1], r[2], plotmat.shape[1])
-                    elif len(r) == 2:
-                        _draw_site(ax, r[0], r[1], plotmat.shape[1])
-                ax.axis([-0.5, plotmat.shape[1] - 0.5, -0.5, plotmat.shape[1] - 0.5])
-                ax.invert_yaxis()
+            im = _plot_pred(ii, ax, 0, key="experiments")
         current_row += 1
 
     for ii, ax in enumerate(reversed(all_axes[current_row])):
-        s = int(output["start_coords"][ii])
-        e = int(output["end_coords"][ii])
-        regionstr = output["chr"] + ":" + str(s) + "-" + str(e)
-        if show_coordinates:
-            ax.set_title(regionstr, fontsize=14, pad=4)
-        if unscaled:
-            plotmat = output["predictions"][1][ii] + np.log(output["normmats"][1][ii])
-            im = ax.imshow(
-                plotmat,
-                interpolation="none",
-                cmap=unscaled_cmap,
-                vmax=np.max(np.diag(plotmat, k=1)),
-            )
-        else:
-            plotmat = output["predictions"][1][ii]
-            im = ax.imshow(plotmat, interpolation="none", cmap=cmap, vmin=vmin, vmax=vmax)
-
-        if output["annos"]:
-            for r in output["annos"][ii]:
-                if len(r) == 3:
-                    _draw_region(ax, r[0], r[1], r[2], plotmat.shape[1])
-                elif len(r) == 2:
-                    _draw_site(ax, r[0], r[1], plotmat.shape[1])
-            ax.axis([-0.5, plotmat.shape[1] - 0.5, -0.5, plotmat.shape[1] - 0.5])
-            ax.invert_yaxis()
-
-        if maskpred:
-            if output["experiments"]:
-                ax.imshow(
-                    np.isnan(output["experiments"][1][ii]), interpolation="none", cmap=bwcmap,
-                )
+        im = _plot_pred(ii, ax, 1, key="predictions", maskpred=maskpred)
     current_row += 1
 
     if output["experiments"]:
         for ii, ax in enumerate(reversed(all_axes[current_row])):
-            s = int(output["start_coords"][ii])
-            e = int(output["end_coords"][ii])
-            regionstr = output["chr"] + ":" + str(s) + "-" + str(e)
-            if show_coordinates:
-                ax.set_title(regionstr, fontsize=14, pad=4)
-            if unscaled:
-                plotmat = output["experiments"][1][ii] + np.log(output["normmats"][1][ii])
-                im = ax.imshow(
-                    plotmat,
-                    interpolation="none",
-                    cmap=unscaled_cmap,
-                    vmax=np.max(np.diag(plotmat, k=1)),
-                )
-            else:
-                plotmat = output["experiments"][1][ii]
-                im = ax.imshow(plotmat, interpolation="none", cmap=cmap, vmin=vmin, vmax=vmax)
-            if output["annos"]:
-                for r in output["annos"][ii]:
-                    if len(r) == 3:
-                        _draw_region(ax, r[0], r[1], r[2], plotmat.shape[1])
-                    elif len(r) == 2:
-                        _draw_site(ax, r[0], r[1], plotmat.shape[1])
-                ax.axis([-0.5, plotmat.shape[1] - 0.5, -0.5, plotmat.shape[1] - 0.5])
-                ax.invert_yaxis()
+            im = _plot_pred(ii, ax, 1, key="experiments", maskpred=maskpred)
         current_row += 1
 
     if colorbar:
