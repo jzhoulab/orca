@@ -59,7 +59,7 @@ tar xf resources_extra.tar.gz
 
 You can use Orca through either the command-line-interface (CLI) which supports most of the core functionalities or access the full capabilities through python. You can jump to the [CLI](#orca-command-line-interface-cli) if you wish to just use the CLI.  
 
-For using Orca from python, you can just add the directory you cloned to your python PATH `sys.path.append(ORCA_PATH)` and use it.  We haven't decided to make Orca a python package,  because most of its functionalities depends on the resource files which is rather large.  
+For using Orca from python, you can just add the directory you cloned to your python PATH `sys.path.append(ORCA_PATH)` and use it.  We haven't decided to make Orca a python package,  because most of its functionalities depends on the resource files which is rather large.  The full documentation is available [here](http://jzhoulab.github.io/orca_docs/).
 
 ```python
 import orca_predict
@@ -114,7 +114,7 @@ outputs = genomepredict(Genome.sequence_to_encoding(sequence), chrom, mpos=pos, 
 outputs = genomepredict_256Mb(Genome.sequence_to_encoding(sequence), chrom, normmats, chrlen, mpos=pos, wpos=wpos, use_cuda=True)
 ```
 
-For full information about using Orca,  you may visit our API documentation page (http://jzhoulab.github.io/orca_docs).
+For full information about using Orca,  you may visit our API documentation page (http://jzhoulab.github.io/orca_docs/).
 
 #### Orca Command-line Interface (CLI)
 For prediction of multiscale interactions for genomic regions,  structural variant of deletion, duplication, inversion, and translocation with single junctions,  you can use the command line interface orca_predict.py and the output includes graphical visualizations in pdf format and numerical results saved in pytorch serialization format. 
