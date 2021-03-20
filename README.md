@@ -43,7 +43,16 @@ python setup.py install
 #### Download model and relevant resource files
 Next, download the model and other resource files needed by Orca. Because these files are large and some are optional, we packaged into several files and you can download what you need (some functionalities may not be available if the relevant files are not downloaded).  
 
-The minimal resource package for running Orca are packaged [here](),  which includes the Orca models and the  hg38 reference genome. It is also recommended to download the preprocessed micro-C datasets binned to the resolutions that Orca use,  which will allow for comparisons with observed data, from [here](). In addition, if you would like to generate chromatin tracks visualizations,  you can download these files [here](). 
+The minimal resource package for running Orca are packaged [here](https://zenodo.org/record/4594207/files/resources_core.tar.gz),  which includes the Orca models and the  hg38 reference genome. It is also recommended to download the preprocessed micro-C datasets binned to the resolutions that Orca use,  which will allow for comparisons with observed data, from [here](https://zenodo.org/record/4594207/files/resources_mcools.tar.gz). In addition, if you would like to generate chromatin tracks visualizations,  you can download these files [here](https://zenodo.org/record/4594676/files/resources_extra.tar.gz). To download and extract all resource files, you can run the following understand under the orca directory.
+
+```bash
+wget https://zenodo.org/record/4594207/files/resources_core.tar.gz
+wget https://zenodo.org/record/4594207/files/resources_mcools.tar.gz
+wget https://zenodo.org/record/4594676/files/resources_extra.tar.gz
+tar xf resources_core.tar.gz
+tar xf resources_mcools.tar.gz
+tar xf resources_extra.tar.gz
+```
 
 #### Basic Usage
 
