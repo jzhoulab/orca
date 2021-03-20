@@ -27,7 +27,7 @@ Orca is a deep learning sequence modeling framework for multiscale genome intera
 If you just need predictions for one or a handful of variants, we have provided the core functionalities on a web server: [orca.zhoulab.io](https://orca.zhoulab.io). 
 
 #### Installation
-For running Orca locally,  clone this repository and download the necessary resources with the following 
+For running Orca locally,  clone this repository with the following 
 command.
 ```bash
 git clone https://github.com/jzhoulab/orca.git
@@ -44,7 +44,7 @@ python setup.py install
 #### Download model and relevant resource files
 Next, download the model and other resource files needed by Orca. Because these files are large and some are optional, we packaged into several files and you can download what you need (some functionalities may not be available if the relevant files are not downloaded).  
 
-The minimal resource package for running Orca are packaged [here](https://zenodo.org/record/4594207/files/resources_core.tar.gz),  which includes the Orca models and the  hg38 reference genome. It is also recommended to download the preprocessed micro-C datasets binned to the resolutions that Orca use,  which will allow for comparisons with observed data, from [here](https://zenodo.org/record/4594207/files/resources_mcools.tar.gz). In addition, if you would like to generate chromatin tracks visualizations,  you can download these files [here](https://zenodo.org/record/4594676/files/resources_extra.tar.gz). To download and extract all resource files, you can run the following commands under the orca directory.
+The minimal resource package for running Orca are packaged [here](https://zenodo.org/record/4594207/files/resources_core.tar.gz) (1.3G),  which includes the Orca models and the  hg38 reference genome. It is also recommended to download the preprocessed micro-C datasets binned to the resolutions that Orca use,  which will allow for comparisons with observed data, from [here](https://zenodo.org/record/4594207/files/resources_mcools.tar.gz) (34G). In addition, if you would like to generate chromatin tracks visualizations,  you can download these files [here](https://zenodo.org/record/4594676/files/resources_extra.tar.gz) (15G). To download and extract all resource files, you can run the following commands under the orca directory.
 
 ```bash
 wget https://zenodo.org/record/4594207/files/resources_core.tar.gz
