@@ -30,7 +30,8 @@ If you just need predictions for one or a handful of variants, we have provided 
 For running Orca locally,  clone this repository and download the necessary resources with the following 
 command.
 ```bash
-git clone
+git clone https://github.com/jzhoulab/orca.git
+cd orca
 ```
 Install python dependencies of Orca and Selene.  You can set up a conda env with `conda env create -f orca_env.yml` or install these packages manually to your environment.  Then,  install pytorch(>=1.7.0) according to [here](https://pytorch.org/get-started/locally/ ).  Finally, install Selene with the commands below - right now we depend on a development branch of Selene with added support for custom targets:  
 ```bash
