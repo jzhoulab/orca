@@ -148,7 +148,7 @@ If the function that you needed is not available from the CLI,  you can use the 
 
 ### Example output
 
-As an example output, we showed example visualizations generated for the prediction of duplication variant effects here.  For structural variant prediction, Orca generates multiple files that each contains a series of multi-level predictions zooming into a breakpoint of the variant, or the corresponding position(s) of the breakpoint in the reference sequence.
+As an example output, here we showed visualizations generated for the predictions of a duplication variant.  For structural variant prediction, Orca generates multiple files that each contains a series of multi-level predictions zooming into a breakpoint of the variant, or the corresponding position(s) of the breakpoint in the reference sequence.
 
 The positions of the variant boundaries are be annotated on the left side of each plot. For reference sequence, we also show the micro-C data for comparison.
 
