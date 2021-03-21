@@ -138,7 +138,7 @@ For prediction of multiscale interactions for genomic regions,  structural varia
     --version       Show version.
 ```
 
-For input,  a `<coordinate>`  argument and an output directory are required.  Most prediction modes except for `break` requires specifying a region as input in the format like `chr9:94904000-126904000`.  
+For input,  a `<coordinate>`  argument and an output directory `<output_dir>` are required.  Most prediction modes except for `break` requires specifying a region as input in the format like `chr9:94904000-126904000`.  
 
 The `break` mode is used for predicting the effect of an translocation that connects two chromosomal breakpoints.  An example `<coordinate>`  input is `chr1:85691449 chr5:89533745 +/+`. Specifically, two breakpoint positions and the corresponding two orientations are needed. The orientations decide how the breakpoints are connected. The ‘+’ or ‘-’ sign indicate whether the left or right side of the breakpoint is used (not forward and reverse strands). For example ‘+/+’ indicates connecting chr1:0-85691449 with chr5:0-89533745 at the breakpoints, while ‘+/-’ indicates connecting chr1:0-85691449 with chr5:89533745-chromosome end. 
 
