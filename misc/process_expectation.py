@@ -21,7 +21,6 @@ res = int(sys.argv[2])
 expected = pd.read_csv(sys.argv[1], sep="\t")
 expectedsum = expected.groupby(["diag"]).agg({"n_valid": "sum", "balanced.sum": "sum"})
 expectedsum["balanced.avg"] = expectedsum["balanced.sum"] / expectedsum["n_valid"]
-expectedtrans = pd.read_csv(sys.argv[1] + ".trans", sep="\t")
 
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
@@ -45,6 +44,9 @@ sv_mono = np.minimum.accumulate(sv)
 
 np.save(arr=sv, file=sys.argv[1] + ".npy")
 np.save(arr=sv_mono, file=sys.argv[1] + ".mono.npy")
+
+expectedtrans = pd.read_csv(sys.argv[1] + ".trans", sep="\t")
+
 np.save(
     arr=np.log(np.sum(expectedtrans["balanced.sum"]) / np.sum(expectedtrans["n_valid"])),
     file=sys.argv[1] + ".trans.npy",
