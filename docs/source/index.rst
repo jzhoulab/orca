@@ -7,15 +7,15 @@ Welcome to Orca's API documentation!
 ================================
 
 This is the API documentaton of Orca, a deep learning sequence model 
-framework for multiscale prediction of genome interactions. 
+framework for multiscale prediction of genome 3D interactions. You can find the Github repository
+`here <https://github.com/jzhoulab/orca>`_ and the webserver `here <https://orca.zhoulab.io/>`_.
 
-
-Most Orca prediction functionalities including structural 
-variant effect predictions can be accessed with the **orca_predict** module. 
-The **orca_utils** module provide some supporting functions such as structural variant
-represention and plotting functionalities. The **orca_model** and **orca_modules** contain the
-class definitions for the models and do not need to be directly accessed. 
-The **selene_utils2** module provide basic data handling classes for Orca. 
+The **orca_predict** module is the main module that provides various Orca prediction functions including 
+functions for predicting structural variant effect for both simple and complex variants. It also provides 
+functions for making predictions from genomic regions or directly from any genomic sequences. The **orca_utils** module provides some supporting functions including a class for structural variant
+represention and plotting functions. The **orca_model** and **orca_modules** contain the class definitions for the models 
+and generally do not need to be directly accessed. The **selene_utils2** module provides `selene <https://github.com/FunctionLab/selene>`_ extensions
+that provide basic data handling classes for Orca. 
 
 .. toctree::
    :maxdepth: 4

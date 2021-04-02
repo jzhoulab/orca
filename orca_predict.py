@@ -40,22 +40,12 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
     Orca models and hg38 reference genome. It also creates Genomic2DFeatures
     objects for experimental micro-C  datasets (for comparison with prediction).
     Load resourced are accessible as global variables.
+    
+    The list of globl variables generated is here:
 
-    Parameters
-    ----------
-    models : list(str)
-        List of model types to load, supported model types includes
-        "32M", "256M", "1M", corresponding to 1-32Mb, 32-256Mb, and 1Mb
-        models. Lower cases are also accepted.  
-    use_cuda : bool, optional
-        Default is True. If true, loaded models are moved to GPU.
-    use_memmapgenome : bool, optional
-        Default is True. If True and the resource file for hg38 mmap exists,
-        use MemmapGenome instead of Genome.
-
-    Global variables
+    Global Variables
     ----------------
-    hg38 : MemmapGenome or Genome
+    hg38 : selene_utils2.MemmapGenome or selene_sdk.sequences.Genome
         If `use_memmapgenome==True` and the resource file for hg38 mmap exists,
         use MemmapGenome instead of Genome.
     h1esc : orca_models.H1esc
@@ -70,26 +60,40 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
         1Mb Orca H1-ESC model
     hff_1m : orca_models.Hff_1M
         1Mb Orca HFF model
-    target_h1esc : Genomic2DFeatures
+    target_h1esc : selene_utils2.Genomic2DFeatures
         Genomic2DFeatures object that load H1-ESC micro-C dataset 4DNFI9GMP2J8
         at 4kb resolution, used for comparison with 1-32Mb models.
-    target_hff : Genomic2DFeatures
+    target_hff : selene_utils2.Genomic2DFeatures
         Genomic2DFeatures object that load HFF micro-C dataset 4DNFI643OYP9
         at 4kb resolution, used for comparison with 1-32Mb models.
-    target_h1esc_256m : Genomic2DFeatures
+    target_h1esc_256m : selene_utils2.Genomic2DFeatures
         Genomic2DFeatures object that load H1-ESC micro-C dataset 4DNFI9GMP2J8
         at 32kb resolution, used for comparison with 32-256Mb models.
-    target_hff_256m : Genomic2DFeatures
+    target_hff_256m : selene_utils2.Genomic2DFeatures
         Genomic2DFeatures object that load HFF micro-C dataset 4DNFI643OYP9
         at 32kb resolution, used for comparison with 32-256Mb models.
-    target_h1esc_1m : Genomic2DFeatures
+    target_h1esc_1m : selene_utils2.Genomic2DFeatures
         Genomic2DFeatures object that load H1-ESC micro-C dataset 4DNFI9GMP2J8
         at 32kb resolution, used for comparison with 1Mb models.
-    target_hff_1m : Genomic2DFeatures
+    target_hff_1m : selene_utils2.Genomic2DFeatures
         Genomic2DFeatures object that load HFF micro-C dataset 4DNFI643OYP9
         at 1kb resolution, used for comparison with 1Mb models.
     target_available : bool
         Indicate whether the micro-C dataset resource file is available.
+
+    Parameters
+    ----------
+    models : list(str)
+        List of model types to load, supported model types includes
+        "32M", "256M", "1M", corresponding to 1-32Mb, 32-256Mb, and 1Mb
+        models. Lower cases are also accepted.  
+    use_cuda : bool, optional
+        Default is True. If true, loaded models are moved to GPU.
+    use_memmapgenome : bool, optional
+        Default is True. If True and the resource file for hg38 mmap exists,
+        use MemmapGenome instead of Genome.
+
+ 
 """
     global hg38, target_hff, target_h1esc, target_hff_256m, target_h1esc_256m, target_hff_1m, target_h1esc_1m, target_available
 

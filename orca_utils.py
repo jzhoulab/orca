@@ -874,7 +874,7 @@ class StructuralChange2(object):
         self.chr_name = chr_name
         self.coord_points = [0, length]
 
-    def coord_sync(self):
+    def _coord_sync(self):
         self.coord_points = [0]
         for seg in self.segments:
             self.coord_points.append(self.coord_points[-1] + seg.len)
@@ -894,7 +894,7 @@ class StructuralChange2(object):
 
             self.segments[segind] = LGRange(ref_1.end - ref_1.start, ref_1)
             self.segments.insert(segind + 1, LGRange(ref_2.end - ref_2.start, ref_2))
-        self.coord_sync()
+        self._coord_sync()
 
     def __add__(self, b):
         a = deepcopy(self)
@@ -906,6 +906,9 @@ class StructuralChange2(object):
         return a
 
     def duplicate(self, start, end):
+        """
+        Duplicate a genomic region.
+        """
         # start and end in cgenome coordinates
         self._split(start)
         self._split(end)
@@ -915,17 +918,23 @@ class StructuralChange2(object):
 
         for i, seg in enumerate(self.segments[ind_s:ind_e]):
             self.segments.insert(ind_e + i, deepcopy(seg))
-        self.coord_sync()
+        self._coord_sync()
 
     def insert(self, start, length, strand="+", name=None):
+        """
+        Insert a genomic sequence with given length.
+        """
         self._split(start)
         ind_s = bisect(self.coord_points, start) - 1
         if not name:
             name = "ins" + str(start) + "_" + str(length)
         self.segments.insert(ind_s, LGRange(length, GRange(name, 0, length, strand)))
-        self.coord_sync()
+        self._coord_sync()
 
     def delete(self, start, end):
+        """
+        Delete a genomic region.
+        """
         # start and end in cgenome coordinates
         self._split(start)
         self._split(end)
@@ -933,9 +942,12 @@ class StructuralChange2(object):
         ind_s = bisect(self.coord_points, start) - 1
         ind_e = bisect(self.coord_points, end) - 1
         del self.segments[ind_s:ind_e]
-        self.coord_sync()
+        self._coord_sync()
 
     def invert(self, start, end):
+        """
+        Invert a genomic region.
+        """
         # start and end in cgenome coordinates
         self._split(start)
         self._split(end)
@@ -954,9 +966,13 @@ class StructuralChange2(object):
                     "-" if self.segments[i].ref.strand == "+" else "-",
                 ),
             )
-        self.coord_sync()
+        self._coord_sync()
 
     def query(self, start, end):
+        """
+        Retrieve the segments in the reference genome that constitute
+        the specified interval in the mutated genome.
+        """
         ind_s = bisect(self.coord_points, start) - 1
         ind_e = bisect(self.coord_points, end)
 
@@ -1002,6 +1018,10 @@ class StructuralChange2(object):
         return ref_coords
 
     def query_ref(self, chr_name, start, end):
+        """
+        Retrieve regions that correspond to the specified reference genome interval
+        in the mutated genome.
+        """
         current_coords = []
         ref_coords = []
         for i, (seglen, refseg) in enumerate(self.segments):
