@@ -1,12 +1,14 @@
 """
 This module provides the selene-based utilities for training and using 
-Orca sequence models for multiscale genome interaction prediction. 
+Orca sequence models for multiscale genome interaction prediction. This
+module contains code from selene.
 """
 
 import os
 from collections import namedtuple
 import sys
 import pkg_resources
+from functools import wraps
 
 import pandas as pd
 import numpy as np
@@ -91,6 +93,8 @@ class MemmapGenome(Genome):
             init_unpickable=init_unpickable,
         )
         self.memmapfile = memmapfile
+        if init_unpickable:
+            self._unpicklable_init()
 
     def _unpicklable_init(self):
         if not self.initialized:
@@ -147,6 +151,7 @@ class MemmapGenome(Genome):
 
     def init(func):
         # delay initlization to allow  multiprocessing
+        @wraps(func)
         def dfunc(self, *args, **kwargs):
             self._unpicklable_init()
             return func(self, *args, **kwargs)
@@ -155,7 +160,8 @@ class MemmapGenome(Genome):
 
     @init
     def get_encoding_from_coords(self, chrom, start, end, strand="+", pad=False):
-        """Gets the one-hot encoding of the genomic sequence at the
+        """
+        Gets the one-hot encoding of the genomic sequence at the
         queried coordinates.
 
         Parameters
@@ -447,6 +453,7 @@ class MultibinGenomicFeatures(Target):
     def init(func):
         # delay initlization to allow multiprocessing (not necessary here
         # but kept for consistency)
+        @wraps(func)
         def dfunc(self, *args, **kwargs):
             if not self.initialized:
                 self.data = pyranges.read_bed(self.input_path)
@@ -483,6 +490,7 @@ class MultibinGenomicFeatures(Target):
         numpy.ndarray
             :math:`L \\times N` array, where :math:`L = ``number of bins`
             and :math:`N =` `self.n_features`.
+
         """
 
         n_bins = int((end - start - self.bin_size) / self.step_size) + 1
@@ -538,9 +546,9 @@ class MultibinGenomicFeatures(Target):
 
 class RandomPositionsSamplerHiC(OnlineSampler):
     """This sampler randomly selects a region in the genome and retrieves
-    sequence and relevant Hi-C and optionally multibin genomic 
-     data from that region. This implementation
-     is modified based on selene_sdk.samplers.RandomPositionSampler.
+    sequence and relevant Hi-C and optionally multibin genomic
+    data from that region. This implementation is modified based on
+    selene_sdk.samplers.RandomPositionSampler.
 
     Parameters
     ----------
@@ -744,6 +752,7 @@ class RandomPositionsSamplerHiC(OnlineSampler):
 
     def init(func):
         # delay initlization to allow  multiprocessing
+        @wraps(func)
         def dfunc(self, *args, **kwargs):
             if not self.initialized:
                 self._partition_genome_by_chromosome()
