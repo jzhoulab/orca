@@ -11,6 +11,7 @@ import sys
 import pathlib
 
 ORCA_PATH = str(pathlib.Path(__file__).absolute().parent.parent)
+sys.path.append(ORCA_PATH)
 from orca_predict import MemmapGenome
 
 if __name__ == "__init__":

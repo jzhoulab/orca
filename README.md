@@ -27,7 +27,7 @@ Orca is a deep learning sequence modeling framework for multiscale genome intera
 If you just need predictions for one or a handful of variants, we have provided the core functionalities on a web server: [orca.zhoulab.io](https://orca.zhoulab.io). 
 
 #### Installation
-For running Orca locally,  clone this repository and download the necessary resources with the following 
+For running Orca locally,  clone this repository with the following 
 command.
 ```bash
 git clone https://github.com/jzhoulab/orca.git
@@ -44,7 +44,7 @@ python setup.py install
 #### Download model and relevant resource files
 Next, download the model and other resource files needed by Orca. Because these files are large and some are optional, we packaged into several files and you can download what you need (some functionalities may not be available if the relevant files are not downloaded).  
 
-The minimal resource package for running Orca are packaged [here](https://zenodo.org/record/4594207/files/resources_core.tar.gz),  which includes the Orca models and the  hg38 reference genome. It is also recommended to download the preprocessed micro-C datasets binned to the resolutions that Orca use,  which will allow for comparisons with observed data, from [here](https://zenodo.org/record/4594207/files/resources_mcools.tar.gz). In addition, if you would like to generate chromatin tracks visualizations,  you can download these files [here](https://zenodo.org/record/4594676/files/resources_extra.tar.gz). To download and extract all resource files, you can run the following commands under the orca directory.
+The minimal resource package for running Orca are packaged [here](https://zenodo.org/record/4594207/files/resources_core.tar.gz) (1.3G),  which includes the Orca models and the  hg38 reference genome. It is also recommended to download the preprocessed micro-C datasets binned to the resolutions that Orca use,  which will allow for comparisons with observed data, from [here](https://zenodo.org/record/4594207/files/resources_mcools.tar.gz) (34G). In addition, if you would like to generate chromatin tracks visualizations,  you can download these files [here](https://zenodo.org/record/4594676/files/resources_extra.tar.gz) (15G). To download and extract all resource files, you can run the following commands under the orca directory.
 
 ```bash
 wget https://zenodo.org/record/4594207/files/resources_core.tar.gz
@@ -59,7 +59,7 @@ tar xf resources_extra.tar.gz
 
 You can use Orca through either the command-line-interface (CLI) which supports most of the core functionalities or access the full capabilities through python. You can jump to the [CLI](#orca-command-line-interface-cli) if you wish to just use the CLI.  
 
-For using Orca from python, you can just add the directory you cloned to your python PATH `sys.path.append(ORCA_PATH)` and use it.  We haven't decided to make Orca a python package,  because most of its functionalities depends on the resource files which is rather large.  
+For using Orca from python, you can just add the directory you cloned to your python PATH `sys.path.append(ORCA_PATH)` and use it.  We haven't decided to make Orca a python package,  because most of its functionalities depends on the resource files which is rather large.  The full documentation is available [here](http://jzhoulab.github.io/orca_docs/).
 
 ```python
 import orca_predict
@@ -114,7 +114,7 @@ outputs = genomepredict(Genome.sequence_to_encoding(sequence), chrom, mpos=pos, 
 outputs = genomepredict_256Mb(Genome.sequence_to_encoding(sequence), chrom, normmats, chrlen, mpos=pos, wpos=wpos, use_cuda=True)
 ```
 
-For full information about using Orca,  you may visit our API documentation page (http://jzhoulab.github.io/orca_docs).
+For full information about using Orca,  you may visit our API documentation page (http://jzhoulab.github.io/orca_docs/).
 
 #### Orca Command-line Interface (CLI)
 For prediction of multiscale interactions for genomic regions,  structural variant of deletion, duplication, inversion, and translocation with single junctions,  you can use the command line interface orca_predict.py and the output includes graphical visualizations in pdf format and numerical results saved in pytorch serialization format. 
@@ -138,7 +138,7 @@ For prediction of multiscale interactions for genomic regions,  structural varia
     --version       Show version.
 ```
 
-For input,  a `<coordinate>`  argument and an output directory are required.  Most prediction modes except for `break` requires specifying a region as input in the format like `chr9:94904000-126904000`.  
+For input,  a `<coordinate>`  argument and an output directory `<output_dir>` are required.  Most prediction modes except for `break` requires specifying a region as input in the format like `chr9:94904000-126904000`.  
 
 The `break` mode is used for predicting the effect of an translocation that connects two chromosomal breakpoints.  An example `<coordinate>`  input is `chr1:85691449 chr5:89533745 +/+`. Specifically, two breakpoint positions and the corresponding two orientations are needed. The orientations decide how the breakpoints are connected. The ‘+’ or ‘-’ sign indicate whether the left or right side of the breakpoint is used (not forward and reverse strands). For example ‘+/+’ indicates connecting chr1:0-85691449 with chr5:0-89533745 at the breakpoints, while ‘+/-’ indicates connecting chr1:0-85691449 with chr5:89533745-chromosome end. 
 
@@ -148,7 +148,7 @@ If the function that you needed is not available from the CLI,  you can use the 
 
 ### Example output
 
-As an example output, we showed example visualizations generated for the prediction of duplication variant effects here.  For structural variant prediction, Orca generates multiple files that each contains a series of multi-level predictions zooming into a breakpoint of the variant, or the corresponding position(s) of the breakpoint in the reference sequence.
+As an example output, here we showed visualizations generated for the predictions of a duplication variant.  For structural variant prediction, Orca generates multiple files that each contains a series of multi-level predictions zooming into a breakpoint of the variant, or the corresponding position(s) of the breakpoint in the reference sequence.
 
 The positions of the variant boundaries are be annotated on the left side of each plot. For reference sequence, we also show the micro-C data for comparison.
 
