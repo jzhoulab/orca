@@ -83,17 +83,16 @@ class MemmapGenome(Genome):
         input_path,
         blacklist_regions=None,
         bases_order=None,
-        init_unpickable=False,
+        init_unpicklable=False,
         memmapfile=None,
     ):
         super().__init__(
             input_path,
             blacklist_regions=blacklist_regions,
             bases_order=bases_order,
-            init_unpickable=init_unpickable,
         )
         self.memmapfile = memmapfile
-        if init_unpickable:
+        if init_unpicklable:
             self._unpicklable_init()
 
     def _unpicklable_init(self):

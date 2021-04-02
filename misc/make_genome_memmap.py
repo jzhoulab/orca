@@ -12,11 +12,12 @@ import pathlib
 
 ORCA_PATH = str(pathlib.Path(__file__).absolute().parent.parent)
 sys.path.append(ORCA_PATH)
-from orca_predict import MemmapGenome
+from selene_utils2 import MemmapGenome
 
-if __name__ == "__init__":
+if __name__ == "__main__":
     hg38 = MemmapGenome(
         input_path=ORCA_PATH + "/resources/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
         memmapfile=ORCA_PATH + "/resources/Homo_sapiens.GRCh38.dna.primary_assembly.fa.mmap",
-        init_unpickleable=True,
+        init_unpicklable=True,
     )
+    print(hg38.initialized,flush=True)
