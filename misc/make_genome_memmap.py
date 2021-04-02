@@ -20,4 +20,3 @@ if __name__ == "__main__":
         memmapfile=ORCA_PATH + "/resources/Homo_sapiens.GRCh38.dna.primary_assembly.fa.mmap",
         init_unpicklable=True,
     )
-    print(hg38.initialized,flush=True)
