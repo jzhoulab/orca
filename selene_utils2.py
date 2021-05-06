@@ -87,9 +87,7 @@ class MemmapGenome(Genome):
         memmapfile=None,
     ):
         super().__init__(
-            input_path,
-            blacklist_regions=blacklist_regions,
-            bases_order=bases_order,
+            input_path, blacklist_regions=blacklist_regions, bases_order=bases_order,
         )
         self.memmapfile = memmapfile
         if init_unpicklable:
@@ -359,14 +357,19 @@ class Genomic2DFeatures(Target):
         else:
             query = ((chrom, start, end),)
         if self.cg:
-            return [
+            out = [
                 _adaptive_coarsegrain(
                     c.matrix(balance=True).fetch(*query), c.matrix(balance=False).fetch(*query)
                 ).astype(np.float32)
                 for c in self.data
-            ][0]
+            ]
         else:
-            return [c.matrix(balance=True).fetch(*query).astype(np.float32) for c in self.data][0]
+            out = [c.matrix(balance=True).fetch(*query).astype(np.float32) for c in self.data]
+        if len(out) == 1:
+            out = out[0]
+        else:
+            out = np.concatenate([o[None, :, :] for o in out], axis=0)
+        return out
 
 
 class MultibinGenomicFeatures(Target):
@@ -831,21 +834,21 @@ class RandomPositionsSamplerHiC(OnlineSampler):
                     if chrom2 != chrom:
                         background_target = np.full_like(retrieved_target, self.background_trans)
                     else:
-                        binsize = (end - start) / retrieved_target.shape[0]
-                        acoor = np.linspace(start, end, retrieved_target.shape[0] + 1)[:-1]
-                        bcoor = np.linspace(start2, end2, retrieved_target.shape[1] + 1)[:-1]
+                        binsize = (end - start) / retrieved_target.shape[-2]
+                        acoor = np.linspace(start, end, retrieved_target.shape[-2] + 1)[:-1]
+                        bcoor = np.linspace(start2, end2, retrieved_target.shape[-1] + 1)[:-1]
                         background_target = self.background_cis[
                             (np.abs(acoor[:, None] - bcoor[None, :]) / binsize).astype(int)
                         ]
 
                 if strand == "-":
-                    retrieved_target = retrieved_target[::-1, :]
+                    retrieved_target = np.flip(retrieved_target, -2)
                     if self.bg:
-                        background_target = background_target[::-1, :]
+                        background_target = np.flip(background_target, -2)
                 if strand2 == "-":
-                    retrieved_target = retrieved_target[:, ::-1]
+                    retrieved_target = np.flip(retrieved_target, -1)
                     if self.bg:
-                        background_target = background_target[:, ::-1]
+                        background_target = np.flip(background_target, -1)
                 retrieved_targets_row.append(retrieved_target)
                 if self.bg:
                     background_targets_row.append(background_target)
@@ -903,8 +906,9 @@ class RandomPositionsSamplerHiC(OnlineSampler):
             :math:`B \\times L \\times N`, where :math:`B` is
             `batch_size`, :math:`L` is the sequence length, and
             :math:`N` is the size of the sequence type's alphabet.
-            The shape of `targets` will be :math:`B \\times M \\times M`,
-            where :math:`M \\times M` is target.shape. The shape of 1D targets
+            The shape of `targets` depends on target.shape. For example it
+            will be :math:`B \\times M \\times M`,
+            when :math:`M \\times M` is target.shape. The shape of 1D targets
             is :math:`B \\times K \\times F`, where :math:`K = ``number of bins`
             and :math:`F =` `self.n_features`. The shape of background matrices
             are the same as `targets`.
@@ -1032,28 +1036,46 @@ class RandomPositionsSamplerHiC(OnlineSampler):
                     for row in seq_targets:
                         offsety = 0
                         for t in row:
-                            targets[
-                                i, offsetx : offsetx + t.shape[0], offsety : offsety + t.shape[1]
-                            ] = t
-                            offsety = offsety + t.shape[1]
-                        offsetx = offsetx + t.shape[0]
-                    assert offsetx == targets.shape[1]
-                    assert offsety == targets.shape[2]
+                            if targets.ndim == 3:
+                                targets[
+                                    i,
+                                    offsetx : offsetx + t.shape[0],
+                                    offsety : offsety + t.shape[1],
+                                ] = t
+                            else:
+                                targets[
+                                    i,
+                                    :,
+                                    offsetx : offsetx + t.shape[-2],
+                                    offsety : offsety + t.shape[-1],
+                                ] = t
+                            offsety = offsety + t.shape[-1]
+                        offsetx = offsetx + t.shape[-2]
+                    assert offsetx == targets.shape[-2]
+                    assert offsety == targets.shape[-1]
 
                     if self.bg:
                         offsetx = 0
                         for row in seq_background:
                             offsety = 0
                             for t in row:
-                                normmats[
-                                    i,
-                                    offsetx : offsetx + t.shape[0],
-                                    offsety : offsety + t.shape[1],
-                                ] = t
-                                offsety = offsety + t.shape[1]
-                            offsetx = offsetx + t.shape[0]
-                        assert offsetx == normmats.shape[1]
-                        assert offsety == normmats.shape[2]
+                                if normmats.ndim == 3:
+                                    normmats[
+                                        i,
+                                        offsetx : offsetx + t.shape[-2],
+                                        offsety : offsety + t.shape[-1],
+                                    ] = t
+                                else:
+                                    normmats[
+                                        i,
+                                        :,
+                                        offsetx : offsetx + t.shape[-2],
+                                        offsety : offsety + t.shape[-1],
+                                    ] = t
+                                offsety = offsety + t.shape[-1]
+                            offsetx = offsetx + t.shape[-2]
+                        assert offsetx == normmats.shape[-2]
+                        assert offsety == normmats.shape[-1]
 
         if coordinate_only:
             return allcoords
