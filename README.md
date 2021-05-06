@@ -59,7 +59,7 @@ tar xf resources_extra.tar.gz
 
 You can use Orca through either the command-line-interface (CLI) which supports most of the core functionalities or access the full capabilities through python. You can jump to the [CLI](#orca-command-line-interface-cli) if you wish to just use the CLI.  
 
-For using Orca from python, you can just add the directory you cloned to your python PATH `sys.path.append(ORCA_PATH)` and use it.  We haven't decided to make Orca a python package,  because most of its functionalities depends on the resource files which is rather large.  The full documentation is available [here](http://jzhoulab.github.io/orca_docs/).
+For using Orca from python, you can just add the directory you cloned to your python PATH `sys.path.append(ORCA_PATH)` and use it (for now we haven't made Orca a python package, because most of its functionalities depends on the resource files which is rather large).  The full API documentation is available [here](http://jzhoulab.github.io/orca_docs/).
 
 ```python
 import orca_predict
@@ -91,7 +91,7 @@ outputs = process_region('chr9', 110404000, 111404000, hg38, window_radius=16000
 ```
 ####  Usage - complex variants
 You can also specify more complex variants than the above types, using the custom variant function (here we specify a simple two-segment variant, but it can be used to specify complex variants with an arbitrary number of segments)
-```
+```python
 _ = process_custom([['chr5', 89411065, 89411065+16000000, '-'],
                 ['chr7', 94378248, 94378248+16000000,'+']],
               [['chr5', 89411065-16000000, 89411065+16000000],
