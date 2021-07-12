@@ -465,7 +465,7 @@ class H1esc_1M(nn.Module):
 
     def __init__(self,):
         super(H1esc_1M, self).__init__()
-        self.net = nn.DataParallel(Net(num_1d_features=32))
+        self.net = nn.DataParallel(Net(num_1d=32))
         num_threads = torch.get_num_threads()
         net_dict = self.net.state_dict()
         pretrained_dict = torch.load(
@@ -513,7 +513,7 @@ class Hff_1M(nn.Module):
 
     def __init__(self,):
         super(Hff_1M, self).__init__()
-        self.net = nn.DataParallel(Net(num_1d_features=22))
+        self.net = nn.DataParallel(Net(num_1d=22))
         num_threads = torch.get_num_threads()
         net_dict = self.net.state_dict()
         pretrained_dict = torch.load(

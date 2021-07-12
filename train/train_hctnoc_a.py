@@ -121,9 +121,7 @@ if __name__ == "__main__":
                 axis=2,
             )
 
-            target_cuda = torch.Tensor(
-                np.log(((target_r + eps) / (normmat_r + eps)))[:, :, :]
-            ).cuda()
+            target_cuda = torch.Tensor(np.log(((target_r + eps) / (normmat_r + eps)))).cuda()
             loss = (
                 (
                     pred[:, 0, :, :][~torch.isnan(target_cuda)]
@@ -170,7 +168,7 @@ if __name__ == "__main__":
                     t += 1
                     if np.mean(np.isnan(target_r)) < 0.7:
                         target_cuda = torch.Tensor(
-                            np.log(((target_r + eps) / (normmat_r + eps)))[:, :, :]
+                            np.log(((target_r + eps) / (normmat_r + eps)))
                         ).cuda()
                         loss = (
                             (
@@ -181,7 +179,7 @@ if __name__ == "__main__":
                         ).mean()
                         mse.append(loss.detach().cpu().numpy())
                         pred = pred[:, 0, :, :].detach().cpu().numpy().reshape((pred.shape[0], -1))
-                        target = np.log(((target_r + eps) / (normmat_r + eps)))[:, :, :].reshape(
+                        target = np.log(((target_r + eps) / (normmat_r + eps))).reshape(
                             (pred.shape[0], -1)
                         )
                         for j in range(pred.shape[0]):

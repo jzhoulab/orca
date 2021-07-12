@@ -2,7 +2,7 @@ import sys
 import os
 
 import numpy as np
-from matplotlib import pyplot as plt, use
+from matplotlib import pyplot as plt
 from scipy.stats import pearsonr
 
 import torch
@@ -19,7 +19,7 @@ from selene_utils2 import *
 from orca_modules import Net
 
 modelstr = "hff_a"
-seed = 315
+seed = 314
 
 
 torch.set_default_tensor_type("torch.FloatTensor")
@@ -99,13 +99,13 @@ if __name__ == "__main__":
 
     bceloss = nn.BCELoss()
     try:
-        net = nn.DataParallel(Net(num_1d_features=22))
+        net = nn.DataParallel(Net(num_1d=22))
         net.load_state_dict(
             torch.load("./models/model_" + modelstr.replace("_swa", "") + ".checkpoint")
         )
     except:
         print("no saved model found!")
-        net = nn.DataParallel(Net(num_1d_features=22))
+        net = nn.DataParallel(Net(num_1d=22))
 
     net.cuda()
     bceloss.cuda()
@@ -146,9 +146,7 @@ if __name__ == "__main__":
                 axis=2,
             )
 
-            target_cuda = torch.Tensor(
-                np.log(((target_r + eps) / (normmat_r + eps)))[:, :, :]
-            ).cuda()
+            target_cuda = torch.Tensor(np.log(((target_r + eps) / (normmat_r + eps)))).cuda()
             loss = (
                 (
                     pred[:, 0, :, :][~torch.isnan(target_cuda)]
@@ -217,7 +215,7 @@ if __name__ == "__main__":
                         loss_1d = bceloss(pred_1d, torch.Tensor(target_1d).float().cuda())
                         loss_1ds.append(loss_1d.detach().cpu().numpy())
                         target_cuda = torch.Tensor(
-                            np.log(((target_r + eps) / (normmat_r + eps)))[:, :, :]
+                            np.log(((target_r + eps) / (normmat_r + eps)))
                         ).cuda()
                         loss = (
                             (
@@ -228,7 +226,7 @@ if __name__ == "__main__":
                         ).mean()
                         mse.append(loss.detach().cpu().numpy())
                         pred = pred[:, 0, :, :].detach().cpu().numpy().reshape((pred.shape[0], -1))
-                        target = np.log(((target_r + eps) / (normmat_r + eps)))[:, :, :].reshape(
+                        target = np.log(((target_r + eps) / (normmat_r + eps))).reshape(
                             (pred.shape[0], -1)
                         )
                         for j in range(pred.shape[0]):

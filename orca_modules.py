@@ -1162,15 +1162,15 @@ class Encoder3(nn.Module):
 
 
 class Net(nn.Module):
-    def __init__(self, num_1d_features=None):
+    def __init__(self, num_1d=None):
         """
         Orca 1Mb model. The trained model weighted can be
         loaded into Encoder and Decoder_1m modules.
 
         Parameters
         ----------
-        num_1d_features : int or None, optional
-            The number of 1D features used for the auxiliary
+        num_1d : int or None, optional
+            The number of 1D targets used for the auxiliary
             task of predicting ChIP-seq profiles.
         """
         super(Net, self).__init__()
@@ -1575,15 +1575,15 @@ class Net(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(5, 1, kernel_size=(1, 1), padding=0),
         )
-        if num_1d_features is not None:
+        if num_1d is not None:
             self.final_1d = nn.Sequential(
                 nn.Conv1d(128, 128, kernel_size=1, padding=0),
                 nn.BatchNorm1d(128),
                 nn.ReLU(inplace=True),
-                nn.Conv1d(128, num_1d_features, kernel_size=1, padding=0),
+                nn.Conv1d(128, num_1d, kernel_size=1, padding=0),
                 nn.Sigmoid(),
             )
-        self.num_1d_features = num_1d_features
+        self.num_1d = num_1d
 
     def forward(self, x):
         """Forward propagation of a batch."""
@@ -1605,7 +1605,7 @@ class Net(nn.Module):
             out7 = self.conv7(lout7)
             mat = out7[:, :, :, None] + out7[:, :, None, :]
             cur = mat
-            if self.num_1d_features:
+            if self.num_1d:
                 output1d = self.final_1d(out7)
                 return cur, output1d
             else:
@@ -1613,7 +1613,7 @@ class Net(nn.Module):
 
         dummy = torch.Tensor(1)
         dummy.requires_grad = True
-        if self.num_1d_features:
+        if self.num_1d:
             cur, output1d = checkpoint(run0, x, dummy)
         else:
             cur = checkpoint(run0, x, dummy)
@@ -1649,7 +1649,7 @@ class Net(nn.Module):
         cur = checkpoint(run2, cur)
         cur = checkpoint(run3, cur)
 
-        if self.num_1d_features:
+        if self.num_1d:
             return cur, output1d
         else:
             return cur
