@@ -568,8 +568,8 @@ def genomeplot(
                 else ""
             )
         )
-
-        with open("/dev/shm/temp.ini", "w") as fh:
+        filename = str(uuid.uuid4())
+        with open(f"/dev/shm/{filename}.ini", "w") as fh:
             fh.write(browser_tracks)
 
         gbfigs = []
@@ -585,9 +585,9 @@ def genomeplot(
             import pygenometracks.plotTracks
             import uuid
 
-            filename = str(uuid.uuid4())
+            
             args = (
-                f"--tracks /dev/shm/temp.ini --region {regionstr} "
+                f"--tracks /dev/shm/{filename}.ini --region {regionstr} "
                 "--trackLabelFraction 0.03 --width 40 --dpi 10 "
                 f"--outFileName /dev/shm/{filename}.png --title {label}".split()
             )
@@ -595,6 +595,7 @@ def genomeplot(
             gbfigs.append(plt.gcf())
 
             os.remove(f"/dev/shm/{filename}.png")
+            os.remove(f"/dev/shm/{filename}.ini")
 
         if file is not None:
             with PdfPages(file) as pdf:
