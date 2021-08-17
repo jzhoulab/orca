@@ -4,6 +4,8 @@ including a class for structural variants and plotting utilities.
 """
 import os
 import pathlib
+import uuid
+
 from copy import deepcopy
 from collections import OrderedDict, namedtuple
 from bisect import bisect
@@ -12,7 +14,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
-
+import pygenometracks.plotTracks
 from colormaps import hnh_cmap_ext5, bwcmap
 
 matplotlib.rcParams["pdf.fonttype"] = 42
@@ -581,10 +583,6 @@ def genomeplot(
                 + "-"
                 + str(int(output["end_coords"][ii]))
             )
-
-            import pygenometracks.plotTracks
-            import uuid
-
             
             args = (
                 f"--tracks /dev/shm/{filename}.ini --region {regionstr} "
