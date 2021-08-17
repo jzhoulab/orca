@@ -32,7 +32,7 @@ from orca_utils import (
 )
 
 ORCA_PATH = str(pathlib.Path(__file__).parent.absolute())
-
+model_dict_global, target_dict_global = {}, {}
 
 def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
     """
@@ -109,6 +109,8 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
         else:
             h1esc.cpu()
             hff.cpu()
+        model_dict_global["h1esc"] = h1esc
+        model_dict_global["hff"] = hff
 
     if "1M" or "1m" in models:
         global h1esc_1m, hff_1m
@@ -122,6 +124,8 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
         else:
             h1esc_1m.cpu()
             hff_1m.cpu()
+        model_dict_global["h1esc_1m"] = h1esc_1m
+        model_dict_global["hff_1m"] = hff_1m
 
     if "256M" or "256m" in models:
         global h1esc_256m, hff_256m
@@ -135,6 +139,8 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
         else:
             h1esc_256m.cpu()
             hff_256m.cpu()
+        model_dict_global["h1esc_256m"] = h1esc_256m
+        model_dict_global["hff_256m"] = hff_256m
 
     if (
         use_memmapgenome
@@ -169,6 +175,9 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
             (8000, 8000),
             cg=True,
         )
+        target_dict_global['hff'] = target_hff
+        target_dict_global['hff_256m'] = target_hff_256m
+        target_dict_global['hff_1m'] = target_hff_1m
     else:
         target_available = False
 
@@ -193,12 +202,15 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
             (8000, 8000),
             cg=True,
         )
+        target_dict_global['h1esc'] = target_h1esc
+        target_dict_global['h1esc_256m'] = target_h1esc_256m
+        target_dict_global['h1esc_1m'] = target_h1esc_1m
     else:
         target_available = False
 
 
 def genomepredict(
-    sequence, mchr, mpos=-1, wpos=-1, targets=None, annotation=None, use_cuda=True, nan_thresh=1,
+    sequence, mchr, mpos=-1, wpos=-1, models=["h1esc", "hff"], targets=None, annotation=None, use_cuda=True, nan_thresh=1,
 ):
     """Multiscale prediction for a 32Mb sequence
     input, zooming into the position specified when generating a series
@@ -221,9 +233,13 @@ def genomepredict(
     wpos : int, optional
         The coordinate of the center position of the sequence, which is
         start position + 16000000.
+    models : list(torch.nn.Module or str), optional
+        Models to use. Default is H1-ESC and HFF Orca models.
     targets : list(numpy.ndarray), optional
-        The observed balanced contact matrices for H1-ESC and HFF from the
-        32Mb region. Used only for plotting when used with genomeplot. 
+        The observed balanced contact matrices from the
+        32Mb region. Used only for plotting when used with genomeplot. The length and
+        order of the list of targets should match the models specified (default is 
+        H1-ESC and HFF Orca models).
         The dimensions of the arrays should be 8000 x 8000 (1kb resolution).
     annotation : str or None, optional
         List of annotations for plotting. The annotation can be generated with
@@ -263,11 +279,20 @@ def genomepredict(
 
 
     """
-    try:
-        models = [h1esc, hff]
-    except NameError:
-        load_resources(models=["32M"], use_cuda=use_cuda)
-        models = [h1esc, hff]
+    model_objs = []
+    for m in models:
+        if isinstance(m, torch.nn.Module):
+            model_objs.append(m)
+        else:
+            try:
+                if m in model_dict_global:
+                    model_objs.append(model_dict_global[m])
+            except KeyError:
+                load_resources(models=["32M"], use_cuda=use_cuda)
+                if m in model_dict_global:
+                    model_objs.append(model_dict_global[m])
+    models = model_objs
+    n_models = len(models)
 
     with torch.no_grad():
         allpreds = []
@@ -452,16 +477,22 @@ def genomepredict(
                         alltargets.append(ts)
                     if annotation is not None:
                         allannos.append(annos)
-                    allstarts.append(starts)
+                    allstarts.append(starts[:-1])
 
     output = {}
-    output["predictions"] = [[], []]
-    for i in range(2):
+    output["predictions"] = [[] for _ in range(n_models)]
+    for i in range(n_models):
         for j in range(len(allpreds[i])):
-            output["predictions"][i].append(
-                allpreds[i][j].cpu().detach().numpy()[0, 0, :] * 0.5
-                + allpreds[i + 2][j].cpu().detach().numpy()[0, 0, ::-1, ::-1] * 0.5
-            )
+            if allpreds[i][j].shape[1] == 1:
+                output["predictions"][i].append(
+                    allpreds[i][j].cpu().detach().numpy()[0, 0, :, :] * 0.5
+                    + allpreds[i + n_models][j].cpu().detach().numpy()[0, 0, ::-1, ::-1] * 0.5
+                )
+            else:
+                output["predictions"][i].append(
+                    allpreds[i][j].cpu().detach().numpy()[0, :, :, :] * 0.5
+                    + allpreds[i + n_models][j].cpu().detach().numpy()[0, :, ::-1, ::-1] * 0.5
+                )
     if targets:
         output["experiments"] = alltargets
     else:
@@ -476,8 +507,7 @@ def genomepredict(
     else:
         output["annos"] = None
     output["normmats"] = [
-        [h1esc.normmats[ii] for ii in [32, 16, 8, 4, 2, 1]],
-        [hff.normmats[ii] for ii in [32, 16, 8, 4, 2, 1]],
+        [model.normmats[ii] for ii in [32, 16, 8, 4, 2, 1]] for model in models
     ]
     return output
 
@@ -489,6 +519,7 @@ def genomepredict_256Mb(
     chrlen,
     mpos=-1,
     wpos=-1,
+    models=["h1esc_256m", "hff_256m"],
     targets=None,
     annotation=None,
     padding_chr=None,
@@ -528,10 +559,13 @@ def genomepredict_256Mb(
         Default is -1. The coordinate of the center position of the sequence, which is
         start position + 16000000. If neither `mpos` nor `wpos` are specified, it zooms 
         into the center of the input by default.
+    models : list(torch.nn.Module or str), optional
+        Models to use. Default is H1-ESC(256Mb) and HFF(256Mb) Orca models.
     targets : list(numpy.ndarray), optional
-        Default is None. A list of observed balanced contact matrices for H1-ESC and HFF from the
-        256Mb input, which may include interchromosomal interactions. Used only for 
-        plotting when used with genomeplot. The dimensions of the arrays should be 
+        The observed balanced contact matrices from the 256Mb sequence. 
+        Used only for plotting when used with genomeplot. The length and
+        order of the list of targets should match the models specified (default is 
+        H1-ESC and HFF Orca models). The dimensions of the arrays should be 
         8000 x 8000 (32kb resolution).
     annotation : str or None, optional
         Default is None. List of annotations for plotting. The annotation can be generated with
@@ -571,13 +605,20 @@ def genomepredict_256Mb(
             - annos : list(list(...))
                 Annotation information. The format is as outputed by orca_utils.process_anno
                 Exists if `annotation` is specified.
-
     """
-    try:
-        models = [h1esc_256m, hff_256m]
-    except NameError:
-        load_resources(models=["256M"], use_cuda=use_cuda)
-        models = [h1esc_256m, hff_256m]
+    model_objs = []
+    for m in models:
+        if isinstance(m, torch.nn.Module):
+            model_objs.append(m)
+        else:
+            try:
+                if m in model_dict_global:
+                    model_objs.append(model_dict_global[m])
+            except KeyError:
+                load_resources(models=["256M"], use_cuda=use_cuda)
+                if m in model_dict_global:
+                    model_objs.append(model_dict_global[m])
+    models = model_objs
 
     with torch.no_grad():
         allpreds = []
@@ -767,17 +808,23 @@ def genomepredict_256Mb(
                         alltargets.append(ts)
                     if annotation is not None:
                         allannos.append(annos)
-                    allstarts.append(starts)
+                    allstarts.append(starts[:-1])
 
     output = {}
 
-    output["predictions"] = [[], []]
-    for i in range(2):
+    output["predictions"] = [[] for _ in range(n_models)]
+    for i in range(n_models):
         for j in range(len(allpreds[i])):
-            output["predictions"][i].append(
-                allpreds[i][j].cpu().detach().numpy()[0, 0, :] * 0.5
-                + allpreds[i + 2][j].cpu().detach().numpy()[0, 0, ::-1, ::-1] * 0.5
-            )
+            if allpreds[i][j].shape[1] == 1:
+                output["predictions"][i].append(
+                    allpreds[i][j].cpu().detach().numpy()[0, 0, :, :] * 0.5
+                    + allpreds[i + n_models][j].cpu().detach().numpy()[0, 0, ::-1, ::-1] * 0.5
+                )
+            else:
+                output["predictions"][i].append(
+                    allpreds[i][j].cpu().detach().numpy()[0, :, :, :] * 0.5
+                    + allpreds[i + n_models][j].cpu().detach().numpy()[0, :, ::-1, ::-1] * 0.5
+                )
     if targets:
         output["experiments"] = alltargets
     else:
@@ -809,99 +856,92 @@ def _retrieve_multi(regionlist, genome, target=True, normmat=True, normmat_regio
 
     sequence = np.vstack(sequences)[None, :, :]
 
-    if target and target_available:
-        targets_h1esc = []
-        targets_hff = []
-        for region in regionlist:
-            if len(region) == 4:
-                chrom, start, end, strand = region
-            else:
-                chrom, start, end = region
-                strand = "+"
-            th1esc = []
-            thff = []
-            for region2 in regionlist:
-                if len(region2) == 4:
-                    chrom2, start2, end2, strand2 = region2
+    
+    if isinstance(target, list):
+        target_objs = target
+        has_target = True
+    elif target and target_available:
+        target_objs = [target_h1esc_256m, target_hff_256m]
+        has_target = True
+    else:
+        has_target = False
+
+    if has_target:
+        targets = []
+        for target_obj in target_objs:
+            targets_ = []
+            for region in regionlist:
+                if len(region) == 4:
+                    chrom, start, end, strand = region
                 else:
-                    chrom2, start2, end2 = region2
+                    chrom, start, end = region
                     strand = "+"
-                th1esc.append(
-                    target_h1esc_256m.get_feature_data(
-                        chrom, start, end, chrom2=chrom2, start2=start2, end2=end2
-                    )
-                )
-                thff.append(
-                    target_hff_256m.get_feature_data(
-                        chrom, start, end, chrom2=chrom2, start2=start2, end2=end2
-                    )
-                )
-                if strand == "-":
-                    th1esc[-1] = th1esc[-1][::-1, :]
-                    thff[-1] = thff[-1][::-1, :]
-                if strand2 == "-":
-                    th1esc[-1] = th1esc[-1][:, ::-1]
-                    thff[-1] = thff[-1][:, ::-1]
-            targets_h1esc.append(th1esc)
-            targets_hff.append(thff)
-        targets_h1esc = np.vstack([np.hstack(l) for l in targets_h1esc])
-        targets_hff = np.vstack([np.hstack(l) for l in targets_hff])
-        targets = [
-            torch.FloatTensor(targets_h1esc[None, :, :]),
-            torch.FloatTensor(targets_hff[None, :, :]),
-        ]
-    if normmat:
-        normmats_h1esc = []
-        normmats_hff = []
-        if normmat_regionlist is None:
-            normmat_regionlist = regionlist
-        for chrom, start, end, strand in normmat_regionlist:
-            bh1esc = []
-            bhff = []
-            for chrom2, start2, end2, strand2 in normmat_regionlist:
-                if chrom2 != chrom:
-                    bh1esc.append(
-                        np.full(
-                            (int((end - start) / 32000), int((end2 - start2) / 32000)),
-                            h1esc_256m.background_trans,
+                t = []
+                for region2 in regionlist:
+                    if len(region2) == 4:
+                        chrom2, start2, end2, strand2 = region2
+                    else:
+                        chrom2, start2, end2 = region2
+                        strand = "+"
+                    t.append(
+                        target_obj.get_feature_data(
+                            chrom, start, end, chrom2=chrom2, start2=start2, end2=end2
                         )
-                    )
-                    bhff.append(
-                        np.full(
-                            (int((end - start) / 32000), int((end2 - start2) / 32000)),
-                            hff_256m.background_trans,
-                        )
-                    )
-                else:
-                    binsize = 32000
-                    acoor = np.linspace(start, end, int((end - start) / 32000) + 1)[:-1]
-                    bcoor = np.linspace(start2, end2, int((end2 - start2) / 32000) + 1)[:-1]
-                    bh1esc.append(
-                        h1esc_256m.background_cis[
-                            (np.abs(acoor[:, None] - bcoor[None, :]) / binsize).astype(int)
-                        ]
-                    )
-                    bhff.append(
-                        hff_256m.background_cis[
-                            (np.abs(acoor[:, None] - bcoor[None, :]) / binsize).astype(int)
-                        ]
                     )
                     if strand == "-":
-                        bh1esc[-1] = bh1esc[-1][::-1, :]
-                        bhff[-1] = bhff[-1][::-1, :]
+                        t[-1] = t[-1][::-1, :]
                     if strand2 == "-":
-                        bh1esc[-1] = bh1esc[-1][:, ::-1]
-                        bhff[-1] = bhff[-1][:, ::-1]
-            normmats_h1esc.append(bh1esc)
-            normmats_hff.append(bhff)
-        normmats_h1esc = np.vstack([np.hstack(l) for l in normmats_h1esc])
-        normmats_hff = np.vstack([np.hstack(l) for l in normmats_hff])
-        normmats = [normmats_h1esc, normmats_hff]
+                        t[-1] = t[-1][:, ::-1]
+                targets_.append(t)
+            targets_= np.vstack([np.hstack(l) for l in targets_])
+            targets.append(targets_)
+        targets = [
+            torch.FloatTensor(l[None, :, :]) for l in targets
+        ]
+
+    if normmat:
+        if isinstance(normmat, list):
+            normmat_objs = normmat
+        else:
+            normmat_objs = [h1esc_256m, hff_256m]
+        
+        if normmat_regionlist is None:
+            normmat_regionlist = regionlist
+
+        normmats = []
+        for normmat_obj in normmat_objs:
+            normmats_ = []
+            for chrom, start, end, strand in normmat_regionlist:
+                b = []
+                for chrom2, start2, end2, strand2 in normmat_regionlist:
+                    if chrom2 != chrom:
+                        b.append(
+                            np.full(
+                                (int((end - start) / 32000), int((end2 - start2) / 32000)),
+                                normmat_obj.background_trans,
+                            )
+                        )
+                    else:
+                        binsize = 32000
+                        acoor = np.linspace(start, end, int((end - start) / 32000) + 1)[:-1]
+                        bcoor = np.linspace(start2, end2, int((end2 - start2) / 32000) + 1)[:-1]
+                        b.append(
+                            normmat_obj.background_cis[
+                                (np.abs(acoor[:, None] - bcoor[None, :]) / binsize).astype(int)
+                            ]
+                        )
+                        if strand == "-":
+                            b[-1] = b[-1][::-1, :]
+                        if strand2 == "-":
+                            b[-1] = b[-1][:, ::-1]
+                normmats_.append(b)
+            normmats_ = np.vstack([np.hstack(l) for l in normmats_])
+            normmats.append(normmats_)
 
     datatuple = (sequence,)
     if normmat:
         datatuple = datatuple + (normmats,)
-    if target and target_available:
+    if has_target:
         datatuple = datatuple + (targets,)
     return datatuple
 
@@ -912,6 +952,7 @@ def process_region(
     mend,
     genome,
     file=None,
+    custom_models=None,
     target=True,
     show_genes=True,
     show_tracks=False,
@@ -933,9 +974,14 @@ def process_region(
         The end coordinate of the region.
     genome : selene_utils2.MemmapGenome or selene_sdk.sequences.Genome
         The reference genome object to extract sequence from
-    target : bool, optional
-        Default is True. If True, retrieve micro-C data for H1-ESC
-        and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9).
+    custom_models : list(torch.nn.Module or str) or None, optional
+        Models to use instead of the default H1-ESC and HFF Orca models.
+        Default is None.
+    target : list(selene_utils2.Genomic2DFeatures or str) or bool, optional
+        If specified as list, use this list of targets to retrieve experimental
+        data (for plotting only). Default is True and will use micro-C data 
+        for H1-ESC and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9) that correspond
+        to the default models.
     file : str or None, optional
         Default is None. The output file prefix.
     show_genes : bool, optional
@@ -972,30 +1018,49 @@ def process_region(
     chrlen = [l for c, l in genome.get_chr_lens() if c == mchr].pop()
     mpos = int((int(mstart) + int(mend)) / 2)
 
+    if custom_models is None:
+        if window_radius == 16000000:
+            models = ["h1esc", "hff"]
+        elif window_radius == 128000000:
+            models = ["h1esc_256m", "hff_256m"]
+        else:
+            raise ValueError(
+                "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
+            )
+    else:
+        models = custom_models
+
+    if target:
+        try:
+            if target == True:
+                if window_radius == 16000000:
+                    target = ["h1esc", "hff"]
+                elif window_radius == 128000000:
+                    target = ["h1esc_256m", "hff_256m"]
+            target = [t if isinstance(t, Genomic2DFeatures) else target_dict_global[t] for t in target]
+        except KeyError:
+            target = False
+
     if window_radius == 16000000:
         wpos = coord_clip(mpos, chrlen)
         sequence = genome.get_encoding_from_coords(
             mchr, wpos - window_radius, wpos + window_radius
         )[None, :]
-        if target and target_available:
+        if target:
             targets = [
                 torch.FloatTensor(
-                    target_h1esc.get_feature_data(
+                    t.get_feature_data(
                         mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
                     )[None, :]
-                ),
-                torch.FloatTensor(
-                    target_hff.get_feature_data(
-                        mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
-                    )[None, :]
-                ),
+                )
+                for t in target
             ]
         else:
             targets = None
     elif window_radius == 128000000:
         chrlen_round = chrlen - chrlen % 32000
         wpos = 128000000
-        if target and target_available:
+        if has_target:
             sequence, normmats, targets = _retrieve_multi(
                 [[mchr, 0, chrlen_round, "+"], [padding_chr, 0, 256000000 - chrlen_round, "+"]],
                 genome,
@@ -1007,6 +1072,7 @@ def process_region(
                 genome,
                 target=target,
             )
+            targets = None
     else:
         raise ValueError(
             "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
@@ -1035,6 +1101,7 @@ def process_region(
             chrlen_round,
             mpos,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             targets=targets,
@@ -1042,7 +1109,7 @@ def process_region(
         )
     else:
         outputs_ref = genomepredict(
-            sequence, mchr, mpos, wpos, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
+            sequence, mchr, mpos, wpos, annotation=anno_scaled, models=models, targets=targets, use_cuda=use_cuda,
         )
     if file is not None:
         if window_radius == 128000000:
@@ -1066,6 +1133,7 @@ def process_dup(
     mend,
     genome,
     file=None,
+    custom_models=None,
     target=True,
     show_genes=True,
     show_tracks=False,
@@ -1087,9 +1155,14 @@ def process_dup(
         The end coordinate of the duplication.
     genome : selene_utils2.MemmapGenome or selene_sdk.sequences.Genome
         The reference genome object to extract sequence from
-    target : bool, optional
-        Default is True. If True, retrieve micro-C data for H1-ESC
-        and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9).
+    custom_models : list(torch.nn.Module or str) or None, optional
+        Models to use instead of the default H1-ESC and HFF Orca models.
+        Default is None.
+    target : list(selene_utils2.Genomic2DFeatures or str) or bool, optional
+        If specified as list, use this list of targets to retrieve experimental
+        data (for plotting only). Default is True and will use micro-C data 
+        for H1-ESC and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9) that correspond
+        to the default models.
     file : str or None, optional
         Default is None. The output file prefix.
     show_genes : bool, optional
@@ -1124,31 +1197,49 @@ def process_dup(
     """
     chrlen = [l for c, l in genome.get_chr_lens() if c == mchr].pop()
 
+    if custom_models is None:
+        if window_radius == 16000000:
+            models = ["h1esc", "hff"]
+        elif window_radius == 128000000:
+            models = ["h1esc_256m", "hff_256m"]
+        else:
+            raise ValueError(
+                "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
+            )
+    else:
+        models = custom_models
+
+    if target:
+        try:
+            if target == True:
+                if window_radius == 16000000:
+                    target = ["h1esc", "hff"]
+                elif window_radius == 128000000:
+                    target = ["h1esc_256m", "hff_256m"]
+            target = [t if isinstance(t, Genomic2DFeatures) else target_dict_global[t] for t in target]
+        except KeyError:
+            target = False
+
     # ref.l
     if window_radius == 16000000:
         wpos = coord_clip(mstart, chrlen)
         sequence = genome.get_encoding_from_coords(
             mchr, wpos - window_radius, wpos + window_radius
         )[None, :]
-        if target and target_available:
+        if target:
             targets = [
                 torch.FloatTensor(
-                    target_h1esc.get_feature_data(
+                    t.get_feature_data(
                         mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
                     )[None, :]
-                ),
-                torch.FloatTensor(
-                    target_hff.get_feature_data(
-                        mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
-                    )[None, :]
-                ),
+                ) for t in target
             ]
         else:
             targets = None
     elif window_radius == 128000000:
         chrlen_round = chrlen - chrlen % 32000
         wpos = 128000000
-        if target and target_available:
+        if target:
             sequence, normmats, targets = _retrieve_multi(
                 [[mchr, 0, chrlen_round, "+"], [padding_chr, 0, 256000000 - chrlen_round, "+"]],
                 genome,
@@ -1160,6 +1251,7 @@ def process_dup(
                 genome,
                 target=target,
             )
+            targets = None
     else:
         raise ValueError(
             "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
@@ -1186,6 +1278,7 @@ def process_dup(
             wpos,
             annotation=anno_scaled,
             padding_chr=padding_chr,
+            models=models,
             targets=targets,
             use_cuda=use_cuda,
         )
@@ -1196,6 +1289,7 @@ def process_dup(
             mstart,
             wpos,
             annotation=anno_scaled,
+            models=models,
             targets=targets,
             use_cuda=use_cuda,
         )
@@ -1219,18 +1313,13 @@ def process_dup(
         sequence = genome.get_encoding_from_coords(
             mchr, wpos - window_radius, wpos + window_radius
         )[None, :]
-        if target and target_available:
+        if target:
             targets = [
                 torch.FloatTensor(
-                    target_h1esc.get_feature_data(
+                    t.get_feature_data(
                         mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
                     )[None, :]
-                ),
-                torch.FloatTensor(
-                    target_hff.get_feature_data(
-                        mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
-                    )[None, :]
-                ),
+                ) for t in target
             ]
         else:
             targets = None
@@ -1248,7 +1337,7 @@ def process_dup(
 
     if window_radius == 16000000:
         outputs_ref_r = genomepredict(
-            sequence, mchr, mend, wpos, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
+            sequence, mchr, mend, wpos, models=models, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
         )
         if file is not None:
             genomeplot(
@@ -1268,6 +1357,7 @@ def process_dup(
             wpos,
             annotation=anno_scaled,
             padding_chr=padding_chr,
+            models=models,
             targets=targets,
             use_cuda=use_cuda,
         )
@@ -1341,7 +1431,7 @@ def process_dup(
 
     if window_radius == 16000000:
         outputs_alt = genomepredict(
-            sequence, mchr, mend, wpos, annotation=anno_scaled, use_cuda=use_cuda
+            sequence, mchr, mend, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
             genomeplot(outputs_alt, show_coordinates=True, file=file + ".alt.pdf")
@@ -1353,6 +1443,7 @@ def process_dup(
             chrlen_alt_round,
             mend,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             use_cuda=use_cuda,
@@ -1372,6 +1463,7 @@ def process_del(
     genome,
     cmap=None,
     file=None,
+    custom_models=None,
     target=True,
     show_genes=True,
     show_tracks=False,
@@ -1393,9 +1485,14 @@ def process_del(
         The end coordinate of the deletion.
     genome : selene_utils2.MemmapGenome or selene_sdk.sequences.Genome
         The reference genome object to extract sequence from
-    target : bool, optional
-        Default is True. If True, retrieve micro-C data for H1-ESC
-        and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9).
+    custom_models : list(torch.nn.Module or str) or None, optional
+        Models to use instead of the default H1-ESC and HFF Orca models.
+        Default is None.
+    target : list(selene_utils2.Genomic2DFeatures or str) or bool, optional
+        If specified as list, use this list of targets to retrieve experimental
+        data (for plotting only). Default is True and will use micro-C data 
+        for H1-ESC and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9) that correspond
+        to the default models.
     file : str or None, optional
         Default is None. The output file prefix.
     show_genes : bool, optional
@@ -1430,31 +1527,49 @@ def process_del(
     """
     chrlen = [l for c, l in genome.get_chr_lens() if c == mchr].pop()
 
+    if custom_models is None:
+        if window_radius == 16000000:
+            models = ["h1esc", "hff"]
+        elif window_radius == 128000000:
+            models = ["h1esc_256m", "hff_256m"]
+        else:
+            raise ValueError(
+                "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
+            )
+    else:
+        models = custom_models
+
+    if target:
+        try:
+            if target == True:
+                if window_radius == 16000000:
+                    target = ["h1esc", "hff"]
+                elif window_radius == 128000000:
+                    target = ["h1esc_256m", "hff_256m"]
+            target = [t if isinstance(t, Genomic2DFeatures) else target_dict_global[t] for t in target]
+        except KeyError:
+            target = False
+
     # ref.l
     if window_radius == 16000000:
         wpos = coord_clip(mstart, chrlen)
         sequence = genome.get_encoding_from_coords(
             mchr, wpos - window_radius, wpos + window_radius
         )[None, :]
-        if target and target_available:
+        if target:
             targets = [
                 torch.FloatTensor(
-                    target_h1esc.get_feature_data(
+                    t.get_feature_data(
                         mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
                     )[None, :]
-                ),
-                torch.FloatTensor(
-                    target_hff.get_feature_data(
-                        mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
-                    )[None, :]
-                ),
+                ) for t in target
             ]
         else:
             targets = None
     elif window_radius == 128000000:
         chrlen_round = chrlen - chrlen % 32000
         wpos = 128000000
-        if target and target_available:
+        if target:
             sequence, normmats, targets = _retrieve_multi(
                 [[mchr, 0, chrlen_round, "+"], [padding_chr, 0, 256000000 - chrlen_round, "+"]],
                 genome,
@@ -1490,6 +1605,7 @@ def process_del(
             chrlen_round,
             mstart,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             targets=targets,
@@ -1501,6 +1617,7 @@ def process_del(
             mchr,
             mstart,
             wpos,
+            models=models,
             annotation=anno_scaled,
             targets=targets,
             use_cuda=use_cuda,
@@ -1526,18 +1643,13 @@ def process_del(
         sequence = genome.get_encoding_from_coords(
             mchr, wpos - window_radius, wpos + window_radius
         )[None, :]
-        if target and target_available:
+        if target:
             targets = [
                 torch.FloatTensor(
-                    target_h1esc.get_feature_data(
+                    t.get_feature_data(
                         mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
                     )[None, :]
-                ),
-                torch.FloatTensor(
-                    target_hff.get_feature_data(
-                        mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
-                    )[None, :]
-                ),
+                ) for t in target
             ]
         else:
             targets = None
@@ -1555,7 +1667,7 @@ def process_del(
 
     if window_radius == 16000000:
         outputs_ref_r = genomepredict(
-            sequence, mchr, mend, wpos, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
+            sequence, mchr, mend, wpos, models=models, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
         )
         if file is not None:
             genomeplot(
@@ -1574,6 +1686,7 @@ def process_del(
             chrlen_round,
             mend,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             targets=targets,
@@ -1619,7 +1732,7 @@ def process_del(
 
     if window_radius == 16000000:
         outputs_alt = genomepredict(
-            sequence, mchr, mstart, wpos, annotation=anno_scaled, use_cuda=use_cuda
+            sequence, mchr, mstart, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
             genomeplot(outputs_alt, show_coordinates=True, cmap=cmap, file=file + ".alt.pdf")
@@ -1631,6 +1744,7 @@ def process_del(
             chrlen_alt_round,
             mstart,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             use_cuda=use_cuda,
@@ -1649,6 +1763,7 @@ def process_inv(
     mend,
     genome,
     file=None,
+    custom_models=None,
     target=True,
     show_genes=True,
     show_tracks=False,
@@ -1670,9 +1785,14 @@ def process_inv(
         The end coordinate of the inversion.
     genome : selene_utils2.MemmapGenome or selene_sdk.sequences.Genome
         The reference genome object to extract sequence from
-    target : bool, optional
-        Default is True. If True, retrieve micro-C data for H1-ESC
-        and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9).
+    custom_models : list(torch.nn.Module or str) or None, optional
+        Models to use instead of the default H1-ESC and HFF Orca models.
+        Default is None.
+    target : list(selene_utils2.Genomic2DFeatures or str) or bool, optional
+        If specified as list, use this list of targets to retrieve experimental
+        data (for plotting only). Default is True and will use micro-C data 
+        for H1-ESC and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9) that correspond
+        to the default models.
     file : str or None, optional
         Default is None. The output file prefix.
     show_genes : bool, optional
@@ -1710,30 +1830,48 @@ def process_inv(
     """
     chrlen = [l for c, l in genome.get_chr_lens() if c == mchr].pop()
 
+    if custom_models is None:
+        if window_radius == 16000000:
+            models = ["h1esc", "hff"]
+        elif window_radius == 128000000:
+            models = ["h1esc_256m", "hff_256m"]
+        else:
+            raise ValueError(
+                "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
+            )
+    else:
+        models = custom_models
+
+    if target:
+        try:
+            if target == True:
+                if window_radius == 16000000:
+                    target = ["h1esc", "hff"]
+                elif window_radius == 128000000:
+                    target = ["h1esc_256m", "hff_256m"]
+            target = [t if isinstance(t, Genomic2DFeatures) else target_dict_global[t] for t in target]
+        except KeyError:
+            target = False
+
     if window_radius == 16000000:
         wpos = coord_clip(mstart, chrlen)
         sequence = genome.get_encoding_from_coords(
             mchr, wpos - window_radius, wpos + window_radius
         )[None, :]
-        if target and target_available:
+        if target:
             targets = [
                 torch.FloatTensor(
-                    target_h1esc.get_feature_data(
+                    t.get_feature_data(
                         mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
                     )[None, :]
-                ),
-                torch.FloatTensor(
-                    target_hff.get_feature_data(
-                        mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
-                    )[None, :]
-                ),
+                ) for t in target
             ]
         else:
             targets = None
     elif window_radius == 128000000:
         chrlen_round = chrlen - chrlen % 32000
         wpos = 128000000
-        if target and target_available:
+        if target:
             sequence, normmats, targets = _retrieve_multi(
                 [[mchr, 0, chrlen_round, "+"], [padding_chr, 0, 256000000 - chrlen_round, "+"]],
                 genome,
@@ -1745,6 +1883,7 @@ def process_inv(
                 genome,
                 target=target,
             )
+            targets = None
     else:
         raise ValueError(
             "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
@@ -1768,6 +1907,7 @@ def process_inv(
             chrlen_round,
             mstart,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             targets=targets,
@@ -1779,6 +1919,7 @@ def process_inv(
             mchr,
             mstart,
             wpos,
+            models=models,
             annotation=anno_scaled,
             targets=targets,
             use_cuda=use_cuda,
@@ -1803,18 +1944,13 @@ def process_inv(
         sequence = genome.get_encoding_from_coords(
             mchr, wpos - window_radius, wpos + window_radius
         )[None, :]
-        if target and target_available:
+        if target:
             targets = [
                 torch.FloatTensor(
-                    target_h1esc.get_feature_data(
+                    t.get_feature_data(
                         mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
                     )[None, :]
-                ),
-                torch.FloatTensor(
-                    target_hff.get_feature_data(
-                        mchr, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
-                    )[None, :]
-                ),
+                ) for t in target
             ]
         else:
             targets = None
@@ -1832,7 +1968,7 @@ def process_inv(
 
     if window_radius == 16000000:
         outputs_ref_r = genomepredict(
-            sequence, mchr, mend, wpos, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
+            sequence, mchr, mend, wpos, models=models, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
         )
         if file is not None:
             genomeplot(
@@ -1850,6 +1986,7 @@ def process_inv(
             chrlen_round,
             mend,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             targets=targets,
@@ -1898,7 +2035,7 @@ def process_inv(
 
     if window_radius == 16000000:
         outputs_alt_l = genomepredict(
-            sequence, mchr, mstart, wpos, annotation=anno_scaled, use_cuda=use_cuda
+            sequence, mchr, mstart, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
             genomeplot(outputs_alt_l, show_coordinates=True, file=file + ".alt.l.pdf")
@@ -1910,6 +2047,7 @@ def process_inv(
             chrlen_round,
             mstart,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             use_cuda=use_cuda,
@@ -1943,7 +2081,7 @@ def process_inv(
         )
     if window_radius == 16000000:
         outputs_alt_r = genomepredict(
-            sequence, mchr, mend, wpos, annotation=anno_scaled, use_cuda=use_cuda
+            sequence, mchr, mend, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
             genomeplot(outputs_alt_r, show_coordinates=True, file=file + ".alt.r.pdf")
@@ -1955,6 +2093,7 @@ def process_inv(
             chrlen_round,
             mend,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             use_cuda=use_cuda,
@@ -1974,6 +2113,7 @@ def process_ins(
     genome,
     strand="+",
     file=None,
+    custom_models=None,
     target=True,
     show_genes=True,
     show_tracks=False,
@@ -1996,9 +2136,14 @@ def process_ins(
         The inserted sequence in string format.
     genome : selene_utils2.MemmapGenome or selene_sdk.sequences.Genome
         The reference genome object to extract sequence from
-    target : bool, optional
-        Default is True. If True, retrieve micro-C data for H1-ESC
-        and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9).
+    custom_models : list(torch.nn.Module or str) or None, optional
+        Models to use instead of the default H1-ESC and HFF Orca models.
+        Default is None.
+    target : list(selene_utils2.Genomic2DFeatures or str) or bool, optional
+        If specified as list, use this list of targets to retrieve experimental
+        data (for plotting only). Default is True and will use micro-C data 
+        for H1-ESC and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9) that correspond
+        to the default models.
     file : str or None, optional
         Default is None. The output file prefix.
     show_genes : bool, optional
@@ -2033,34 +2178,50 @@ def process_ins(
     """
     chrlen = [l for c, l in genome.get_chr_lens() if c == mchr].pop()
 
+    if custom_models is None:
+        if window_radius == 16000000:
+            models = ["h1esc", "hff"]
+        elif window_radius == 128000000:
+            models = ["h1esc_256m", "hff_256m"]
+        else:
+            raise ValueError(
+                "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
+            )
+    else:
+        models = custom_models
+
+    if target:
+        try:
+            if target == True:
+                if window_radius == 16000000:
+                    target = ["h1esc", "hff"]
+                elif window_radius == 128000000:
+                    target = ["h1esc_256m", "hff_256m"]
+            target = [t if isinstance(t, Genomic2DFeatures) else target_dict_global[t] for t in target]
+        except KeyError:
+            target = False
+
     if window_radius == 16000000:
         wpos = coord_clip(mpos, chrlen)
         sequence = genome.get_encoding_from_coords(
             mchr, wpos - window_radius, wpos + window_radius
         )[None, :]
-        if target and target_available:
+        if target:
             targets = [
                 torch.FloatTensor(
-                    target_h1esc.get_feature_data(
+                    t.get_feature_data(
                         "chr" + mchr.replace("chr", ""),
                         coord_round(wpos - window_radius),
                         coord_round(wpos + window_radius),
                     )[None, :]
-                ),
-                torch.FloatTensor(
-                    target_hff.get_feature_data(
-                        "chr" + mchr.replace("chr", ""),
-                        coord_round(wpos - window_radius),
-                        coord_round(wpos + window_radius),
-                    )[None, :]
-                ),
+                ) for t in target
             ]
         else:
             targets = None
     elif window_radius == 128000000:
         chrlen_round = chrlen - chrlen % 32000
         wpos = 128000000
-        if target and target_available:
+        if target:
             sequence, normmats, targets = _retrieve_multi(
                 [[mchr, 0, chrlen_round, "+"], [padding_chr, 0, 256000000 - chrlen_round, "+"]],
                 genome,
@@ -2072,6 +2233,7 @@ def process_ins(
                 genome,
                 target=target,
             )
+            targets = None
     else:
         raise ValueError(
             "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
@@ -2089,6 +2251,7 @@ def process_ins(
             chrlen_round,
             mpos,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             targets=targets,
@@ -2096,7 +2259,7 @@ def process_ins(
         )
     else:
         outputs_ref = genomepredict(
-            sequence, mchr, mpos, wpos, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
+            sequence, mchr, mpos, wpos, annotation=anno_scaled, models=models, targets=targets, use_cuda=use_cuda,
         )
 
     if file is not None:
@@ -2170,7 +2333,7 @@ def process_ins(
 
     if window_radius == 16000000:
         outputs_alt_l = genomepredict(
-            sequence, mchr, mpos, wpos, annotation=anno_scaled, use_cuda=use_cuda
+            sequence, mchr, mpos, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
             genomeplot(outputs_alt_l, show_coordinates=True, file=file + ".alt.l.pdf")
@@ -2182,6 +2345,7 @@ def process_ins(
             chrlen_alt_round,
             mpos,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             use_cuda=use_cuda,
@@ -2243,6 +2407,7 @@ def process_ins(
             chrlen_alt_round,
             mpos + len(ins_seq),
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             use_cuda=use_cuda,
@@ -2263,6 +2428,7 @@ def process_custom(
     ref_mpos_list=None,
     anno_list=None,
     ref_anno_list=None,
+    custom_models=None,
     target=True,
     file=None,
     show_genes=True,
@@ -2302,9 +2468,14 @@ def process_custom(
         then zoom into the center of each region. Note that `ref_mpos_list`
         specifies the relative positions with respect to start of the 32Mb. 
         For example, `16000000` means the center of the sequence.
-    target : bool, optional
-        Default is True. If True, retrieve micro-C data for H1-ESC
-        and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9).
+    custom_models : list(torch.nn.Module or str) or None, optional
+        Models to use instead of the default H1-ESC and HFF Orca models.
+        Default is None.
+    target : list(selene_utils2.Genomic2DFeatures or str) or bool, optional
+        If specified as list, use this list of targets to retrieve experimental
+        data (for plotting only). Default is True and will use micro-C data 
+        for H1-ESC and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9) that correspond
+        to the default models.
     file : str or None, optional
         Default is None. The output file prefix.
     show_genes : bool, optional
@@ -2333,6 +2504,28 @@ def process_custom(
         details of the dictionary content.
         
     """
+    if custom_models is None:
+        if window_radius == 16000000:
+            models = ["h1esc", "hff"]
+        elif window_radius == 128000000:
+            models = ["h1esc_256m", "hff_256m"]
+        else:
+            raise ValueError(
+                "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
+            )
+    else:
+        models = custom_models
+
+    if target:
+        try:
+            if target == True:
+                if window_radius == 16000000:
+                    target = ["h1esc", "hff"]
+                elif window_radius == 128000000:
+                    target = ["h1esc_256m", "hff_256m"]
+            target = [t if isinstance(t, Genomic2DFeatures) else target_dict_global[t] for t in target]
+        except KeyError:
+            target = False
 
     def validate_region_list(region_list, enforce_strand=None):
         sumlen = 0
@@ -2351,18 +2544,13 @@ def process_custom(
         validate_region_list([ref_region], enforce_strand="+")
         ref_sequence = genome.get_encoding_from_coords(*ref_region)[None, :]
 
-        if target and target_available:
+        if target:
             targets = [
                 torch.FloatTensor(
-                    target_h1esc.get_feature_data(
+                    t.get_feature_data(
                         ref_region[0], coord_round(ref_region[1]), coord_round(ref_region[2]),
                     )[None, :]
-                ),
-                torch.FloatTensor(
-                    target_hff.get_feature_data(
-                        ref_region[0], coord_round(ref_region[1]), coord_round(ref_region[2]),
-                    )[None, :]
-                ),
+                ) for t in target
             ]
         else:
             targets = None
@@ -2375,6 +2563,7 @@ def process_custom(
             ref_region[1] + window_radius if ref_mpos_list is None else ref_mpos_list[i],
             ref_region[1] + window_radius,
             annotation=anno_scaled,
+            models=models,
             targets=targets,
             use_cuda=use_cuda,
         )
@@ -2400,7 +2589,7 @@ def process_custom(
     anno_scaled = process_anno(anno_list, base=0, window_radius=window_radius)
 
     outputs_alt = genomepredict(
-        alt_sequence, "chimeric", mpos, window_radius, annotation=anno_scaled, use_cuda=use_cuda,
+        alt_sequence, "chimeric", mpos, window_radius, models=models, annotation=anno_scaled, use_cuda=use_cuda,
     )
     if file is not None:
         genomeplot(outputs_alt, show_coordinates=False, file=file + ".alt.pdf")
@@ -2415,6 +2604,7 @@ def process_single_breakpoint(
     orientation1,
     orientation2,
     genome,
+    custom_models=None,
     target=True,
     file=None,
     show_genes=True,
@@ -2454,9 +2644,14 @@ def process_single_breakpoint(
         '+' indicate the left and '-' indicate the right side.
     genome : selene_utils2.MemmapGenome or selene_sdk.sequences.Genome
         The reference genome object to extract sequence from
-    target : bool, optional
-        Default is True. If True, retrieve micro-C data for H1-ESC
-        and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9).
+    custom_models : list(torch.nn.Module or str) or None, optional
+        Models to use instead of the default H1-ESC and HFF Orca models.
+        Default is None.
+    target : list(selene_utils2.Genomic2DFeatures or str) or bool, optional
+        If specified as list, use this list of targets to retrieve experimental
+        data (for plotting only). Default is True and will use micro-C data 
+        for H1-ESC and HFF cells (4DNFI9GMP2J8, 4DNFI643OYP9) that correspond
+        to the default models.
     file : str or None, optional
         Default is None. The output file prefix.
     show_genes : bool, optional
@@ -2487,33 +2682,51 @@ def process_single_breakpoint(
         input to genomeplot or genomeplot_256Mb. See documentation of `genomepredict` or `genomepredict_256Mb` for
         details of the dictionary content.
     """
-    chrlen1 = [l for c, l in genome.get_chr_lens() if c == chr1].pop()
 
+    if custom_models is None:
+        if window_radius == 16000000:
+            models = ["h1esc", "hff"]
+        elif window_radius == 128000000:
+            models = ["h1esc_256m", "hff_256m"]
+        else:
+            raise ValueError(
+                "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
+            )
+    else:
+        models = custom_models
+
+    if target:
+        try:
+            if target == True:
+                if window_radius == 16000000:
+                    target = ["h1esc", "hff"]
+                elif window_radius == 128000000:
+                    target = ["h1esc_256m", "hff_256m"]
+            target = [t if isinstance(t, Genomic2DFeatures) else target_dict_global[t] for t in target]
+        except KeyError:
+            target = False
+
+    chrlen1 = [l for c, l in genome.get_chr_lens() if c == chr1].pop()
     # ref.l
     if window_radius == 16000000:
         wpos = coord_clip(pos1, chrlen1)
         sequence = genome.get_encoding_from_coords(
             chr1, wpos - window_radius, wpos + window_radius
         )[None, :]
-        if target and target_available:
+        if target:
             targets = [
                 torch.FloatTensor(
-                    target_h1esc.get_feature_data(
+                    t.get_feature_data(
                         chr1, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
                     )[None, :]
-                ),
-                torch.FloatTensor(
-                    target_hff.get_feature_data(
-                        chr1, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
-                    )[None, :]
-                ),
+                ) for t in target
             ]
         else:
             targets = None
     elif window_radius == 128000000:
         chrlen1_round = chrlen1 - chrlen1 % 32000
         wpos = 128000000
-        if target and target_available:
+        if target:
             sequence, normmats, targets = _retrieve_multi(
                 [[chr1, 0, chrlen1_round, "+"], [padding_chr, 0, 256000000 - chrlen1_round, "+"]],
                 genome,
@@ -2525,6 +2738,7 @@ def process_single_breakpoint(
                 genome,
                 target=target,
             )
+            targets = None
     else:
         raise ValueError(
             "Only window_radius 16000000 (32Mb models) or 128000000 (256Mb models) are supported"
@@ -2542,6 +2756,7 @@ def process_single_breakpoint(
             chrlen1_round,
             pos1,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             targets=targets,
@@ -2549,7 +2764,7 @@ def process_single_breakpoint(
         )
     else:
         outputs_ref_1 = genomepredict(
-            sequence, chr1, pos1, wpos, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
+            sequence, chr1, pos1, wpos, models=models, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
         )
     if file is not None:
         if window_radius == 128000000:
@@ -2573,25 +2788,20 @@ def process_single_breakpoint(
         sequence = genome.get_encoding_from_coords(
             chr2, wpos - window_radius, wpos + window_radius
         )[None, :]
-        if target and target_available:
+        if target:
             targets = [
                 torch.FloatTensor(
-                    target_h1esc.get_feature_data(
+                    t.get_feature_data(
                         chr2, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
                     )[None, :]
-                ),
-                torch.FloatTensor(
-                    target_hff.get_feature_data(
-                        chr2, coord_round(wpos - window_radius), coord_round(wpos + window_radius),
-                    )[None, :]
-                ),
+                ) for t in target
             ]
         else:
             targets = None
     elif window_radius == 128000000:
         chrlen2_round = chrlen2 - chrlen2 % 32000
         wpos = 128000000
-        if target and target_available:
+        if target:
             sequence, normmats, targets = _retrieve_multi(
                 [[chr2, 0, chrlen2_round, "+"], [padding_chr, 0, 256000000 - chrlen2_round, "+"]],
                 genome,
@@ -2603,6 +2813,7 @@ def process_single_breakpoint(
                 genome,
                 target=target,
             )
+            targets = None
 
     anno_scaled = process_anno(
         [[pos2, "single"]], base=wpos - window_radius, window_radius=window_radius
@@ -2616,6 +2827,7 @@ def process_single_breakpoint(
             chrlen2_round,
             pos2,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             targets=targets,
@@ -2623,7 +2835,7 @@ def process_single_breakpoint(
         )
     else:
         outputs_ref_2 = genomepredict(
-            sequence, chr2, pos2, wpos, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
+            sequence, chr2, pos2, wpos, models=models, annotation=anno_scaled, targets=targets, use_cuda=use_cuda,
         )
 
     if file is not None:
@@ -2715,7 +2927,7 @@ def process_single_breakpoint(
     anno_scaled = process_anno([[anno[0][-1], "double"]], base=0, window_radius=window_radius)
     if window_radius == 16000000:
         outputs_alt = genomepredict(
-            sequence, chr1 + "|" + chr2, breakpos, wpos, annotation=anno_scaled, use_cuda=use_cuda
+            sequence, chr1 + "|" + chr2, breakpos, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
             genomeplot(outputs_alt, show_coordinates=False, file=file + ".alt.pdf", colorbar=True)
@@ -2727,6 +2939,7 @@ def process_single_breakpoint(
             chrlen_alt_round,
             breakpos,
             wpos,
+            models=models,
             annotation=anno_scaled,
             padding_chr=padding_chr,
             use_cuda=use_cuda,

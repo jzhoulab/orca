@@ -77,6 +77,7 @@ def genomeplot(
     maskpred=False,
     vmin=-1,
     vmax=2,
+    model_labels = ["H1-ESC", "HFF"]
 ):
     """
     Plot the multiscale prediction outputs for 32Mb output.
@@ -117,6 +118,8 @@ def genomeplot(
         Default is -1. The lowerbound value for heatmap colormap.
     vmax : int, optional
         Default is 2. The upperbound value for heatmap colormap.
+    model_labels : list(str), optional
+        Model labels for plotting. Default is ["H1-ESC", "HFF"].
 
     Returns
     -------
@@ -127,7 +130,15 @@ def genomeplot(
     if unscaled_cmap is None:
         unscaled_cmap = hnh_cmap_ext5
 
-    n_axes = 2 + 2 * (output["experiments"] is not None)
+    n_axes = len(output["predictions"]) 
+    try:
+        assert output["predictions"][0][0].ndim == 2
+    except:
+        raise ValueError("Plotting predictions with more than two-dimensions are not supported.")
+    if output["experiments"] is not None:
+        n_axes += len(output["predictions"])
+
+
 
     fig, all_axes = plt.subplots(figsize=(36, 6 * n_axes), nrows=n_axes, ncols=6)
 
@@ -139,100 +150,38 @@ def genomeplot(
     for i, xlabel in enumerate(["1Mb", "2Mb", "4Mb", "8Mb", "16Mb", "32Mb"]):
         all_axes[-1, i].set_xlabel(xlabel, labelpad=20, fontsize=20, weight="black")
 
+    
     if output["experiments"] is not None:
-        all_axes[0, 0].set_ylabel(
-            "H1-ESC Pred",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
-        all_axes[1, 0].set_ylabel(
-            "H1-ESC Obs",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
-        all_axes[2, 0].set_ylabel(
-            "HFF Pred",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
-        all_axes[3, 0].set_ylabel(
-            "HFF Obs",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
+        current_axis = 0
+        for label in model_labels:
+            for suffix in [" Pred", " Obs"]:
+                all_axes[current_axis, 0].set_ylabel(
+                    label + suffix,
+                    labelpad=20,
+                    fontsize=20,
+                    weight="black",
+                    rotation="horizontal",
+                    ha="right",
+                    va="center",
+                )
+                current_axis += 1
     else:
-        all_axes[0, 0].set_ylabel(
-            "H1-ESC Pred",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
-        all_axes[1, 0].set_ylabel(
-            "HFF Pred",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
+        current_axis = 0
+        for label in model_labels:
+            for suffix in [" Pred"]:
+                all_axes[current_axis, 0].set_ylabel(
+                    label + suffix,
+                    labelpad=20,
+                    fontsize=20,
+                    weight="black",
+                    rotation="horizontal",
+                    ha="right",
+                    va="center",
+                )
+                current_axis += 1
 
     current_row = 0
-    for ii, ax in enumerate(reversed(all_axes[current_row])):
-        s = int(output["start_coords"][ii])
-        e = int(output["end_coords"][ii])
-        regionstr = output["chr"] + ":" + str(s) + "-" + str(e)
-        if show_coordinates:
-            ax.set_title(regionstr, fontsize=14, pad=4)
-        if unscaled:
-            plotmat = output["predictions"][0][ii] + np.log(output["normmats"][0][ii])
-            im = ax.imshow(
-                plotmat,
-                interpolation="none",
-                cmap=unscaled_cmap,
-                vmax=np.max(np.diag(plotmat, k=1)),
-            )
-        else:
-            plotmat = output["predictions"][0][ii]
-            im = ax.imshow(plotmat, interpolation="none", cmap=cmap, vmin=vmin, vmax=vmax)
-
-        if output["annos"]:
-            for r in output["annos"][ii]:
-                if len(r) == 3:
-                    _draw_region(ax, r[0], r[1], r[2], plotmat.shape[1])
-                elif len(r) == 2:
-                    _draw_site(ax, r[0], r[1], plotmat.shape[1])
-            ax.axis([-0.5, plotmat.shape[1] - 0.5, -0.5, plotmat.shape[1] - 0.5])
-            ax.invert_yaxis()
-
-        if maskpred:
-            if output["experiments"]:
-                ax.imshow(
-                    np.isnan(output["experiments"][0][ii]), interpolation="none", cmap=bwcmap,
-                )
-
-    current_row += 1
-
-    if output["experiments"]:
+    for model_i in range(len(output["predictions"])):
         for ii, ax in enumerate(reversed(all_axes[current_row])):
             s = int(output["start_coords"][ii])
             e = int(output["end_coords"][ii])
@@ -240,7 +189,7 @@ def genomeplot(
             if show_coordinates:
                 ax.set_title(regionstr, fontsize=14, pad=4)
             if unscaled:
-                plotmat = output["experiments"][0][ii] + np.log(output["normmats"][0][ii])
+                plotmat = output["predictions"][model_i][ii] + np.log(output["normmats"][model_i][ii])
                 im = ax.imshow(
                     plotmat,
                     interpolation="none",
@@ -248,8 +197,9 @@ def genomeplot(
                     vmax=np.max(np.diag(plotmat, k=1)),
                 )
             else:
-                plotmat = output["experiments"][0][ii]
+                plotmat = output["predictions"][model_i][ii]
                 im = ax.imshow(plotmat, interpolation="none", cmap=cmap, vmin=vmin, vmax=vmax)
+
             if output["annos"]:
                 for r in output["annos"][ii]:
                     if len(r) == 3:
@@ -258,69 +208,44 @@ def genomeplot(
                         _draw_site(ax, r[0], r[1], plotmat.shape[1])
                 ax.axis([-0.5, plotmat.shape[1] - 0.5, -0.5, plotmat.shape[1] - 0.5])
                 ax.invert_yaxis()
+
+            if maskpred:
+                if output["experiments"]:
+                    ax.imshow(
+                        np.isnan(output["experiments"][0][ii]), interpolation="none", cmap=bwcmap,
+                    )
+
         current_row += 1
 
-    for ii, ax in enumerate(reversed(all_axes[current_row])):
-        s = int(output["start_coords"][ii])
-        e = int(output["end_coords"][ii])
-        regionstr = output["chr"] + ":" + str(s) + "-" + str(e)
-        if show_coordinates:
-            ax.set_title(regionstr, fontsize=14, pad=4)
-        if unscaled:
-            plotmat = output["predictions"][1][ii] + np.log(output["normmats"][1][ii])
-            im = ax.imshow(
-                plotmat,
-                interpolation="none",
-                cmap=unscaled_cmap,
-                vmax=np.max(np.diag(plotmat, k=1)),
-            )
-        else:
-            plotmat = output["predictions"][1][ii]
-            im = ax.imshow(plotmat, interpolation="none", cmap=cmap, vmin=vmin, vmax=vmax)
+        if output["experiments"]:
+            for ii, ax in enumerate(reversed(all_axes[current_row])):
+                s = int(output["start_coords"][ii])
+                e = int(output["end_coords"][ii])
+                regionstr = output["chr"] + ":" + str(s) + "-" + str(e)
+                if show_coordinates:
+                    ax.set_title(regionstr, fontsize=14, pad=4)
+                if unscaled:
+                    plotmat = output["experiments"][model_i][ii] + np.log(output["normmats"][model_i][ii])
+                    im = ax.imshow(
+                        plotmat,
+                        interpolation="none",
+                        cmap=unscaled_cmap,
+                        vmax=np.max(np.diag(plotmat, k=1)),
+                    )
+                else:
+                    plotmat = output["experiments"][model_i][ii]
+                    im = ax.imshow(plotmat, interpolation="none", cmap=cmap, vmin=vmin, vmax=vmax)
+                if output["annos"]:
+                    for r in output["annos"][ii]:
+                        if len(r) == 3:
+                            _draw_region(ax, r[0], r[1], r[2], plotmat.shape[1])
+                        elif len(r) == 2:
+                            _draw_site(ax, r[0], r[1], plotmat.shape[1])
+                    ax.axis([-0.5, plotmat.shape[1] - 0.5, -0.5, plotmat.shape[1] - 0.5])
+                    ax.invert_yaxis()
+            current_row += 1
 
-        if output["annos"]:
-            for r in output["annos"][ii]:
-                if len(r) == 3:
-                    _draw_region(ax, r[0], r[1], r[2], plotmat.shape[1])
-                elif len(r) == 2:
-                    _draw_site(ax, r[0], r[1], plotmat.shape[1])
-            ax.axis([-0.5, plotmat.shape[1] - 0.5, -0.5, plotmat.shape[1] - 0.5])
-            ax.invert_yaxis()
-
-        if maskpred:
-            if output["experiments"]:
-                ax.imshow(
-                    np.isnan(output["experiments"][1][ii]), interpolation="none", cmap=bwcmap,
-                )
-    current_row += 1
-
-    if output["experiments"]:
-        for ii, ax in enumerate(reversed(all_axes[current_row])):
-            s = int(output["start_coords"][ii])
-            e = int(output["end_coords"][ii])
-            regionstr = output["chr"] + ":" + str(s) + "-" + str(e)
-            if show_coordinates:
-                ax.set_title(regionstr, fontsize=14, pad=4)
-            if unscaled:
-                plotmat = output["experiments"][1][ii] + np.log(output["normmats"][1][ii])
-                im = ax.imshow(
-                    plotmat,
-                    interpolation="none",
-                    cmap=unscaled_cmap,
-                    vmax=np.max(np.diag(plotmat, k=1)),
-                )
-            else:
-                plotmat = output["experiments"][1][ii]
-                im = ax.imshow(plotmat, interpolation="none", cmap=cmap, vmin=vmin, vmax=vmax)
-            if output["annos"]:
-                for r in output["annos"][ii]:
-                    if len(r) == 3:
-                        _draw_region(ax, r[0], r[1], r[2], plotmat.shape[1])
-                    elif len(r) == 2:
-                        _draw_site(ax, r[0], r[1], plotmat.shape[1])
-                ax.axis([-0.5, plotmat.shape[1] - 0.5, -0.5, plotmat.shape[1] - 0.5])
-                ax.invert_yaxis()
-        current_row += 1
+   
 
     if colorbar:
         fig.colorbar(im, ax=all_axes.ravel().tolist(), fraction=0.02, shrink=0.1, pad=0.005)
@@ -620,6 +545,7 @@ def genomeplot_256Mb(
     maskpred=True,
     vmin=-1,
     vmax=2,
+    model_labels=["H1-ESC", "HFF"]
 ):
     """
     Plot the multiscale prediction outputs for 256Mb output.
@@ -653,6 +579,8 @@ def genomeplot_256Mb(
         Default is -1. The lowerbound value for heatmap colormap.
     vmax : int, optional
         Default is 2. The upperbound value for heatmap colormap.
+    model_labels : list(str), optional
+        Model labels for plotting. Default is ["H1-ESC", "HFF"].
 
     Returns
     -------
@@ -663,7 +591,13 @@ def genomeplot_256Mb(
     if unscaled_cmap is None:
         unscaled_cmap = hnh_cmap_ext5
 
-    n_axes = 2 + 2 * (output["experiments"] is not None)
+    n_axes = len(output["predictions"]) 
+    try:
+        assert output["predictions"][0][0].ndim == 2
+    except:
+        raise ValueError("Plotting predictions with more than two-dimensions are not supported.")
+    if output["experiments"] is not None:
+        n_axes += len(output["predictions"])
 
     fig, all_axes = plt.subplots(figsize=(24, 6 * n_axes), nrows=n_axes, ncols=4)
 
@@ -674,63 +608,35 @@ def genomeplot_256Mb(
 
     for i, xlabel in enumerate(["32Mb", "64Mb", "128Mb", "256Mb"]):
         all_axes[-1, i].set_xlabel(xlabel, labelpad=20, fontsize=20, weight="black")
-
+    
     if output["experiments"] is not None:
-        all_axes[0, 0].set_ylabel(
-            "H1-ESC Pred",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
-        all_axes[1, 0].set_ylabel(
-            "H1-ESC Obs",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
-        all_axes[2, 0].set_ylabel(
-            "HFF Pred",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
-        all_axes[3, 0].set_ylabel(
-            "HFF Obs",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
+        current_axis = 0
+        for label in model_labels:
+            for suffix in [" Pred", " Obs"]:
+                all_axes[current_axis, 0].set_ylabel(
+                    label + suffix,
+                    labelpad=20,
+                    fontsize=20,
+                    weight="black",
+                    rotation="horizontal",
+                    ha="right",
+                    va="center",
+                )
+                current_axis += 1
     else:
-        all_axes[0, 0].set_ylabel(
-            "H1-ESC Pred",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
-        all_axes[1, 0].set_ylabel(
-            "HFF Pred",
-            labelpad=20,
-            fontsize=20,
-            weight="black",
-            rotation="horizontal",
-            ha="right",
-            va="center",
-        )
+        current_axis = 0
+        for label in model_labels:
+            for suffix in [" Pred"]:
+                all_axes[current_axis, 0].set_ylabel(
+                    label + suffix,
+                    labelpad=20,
+                    fontsize=20,
+                    weight="black",
+                    rotation="horizontal",
+                    ha="right",
+                    va="center",
+                )
+                current_axis += 1
 
     def _plot_pred(ii, ax, model_i, key="predictions", maskpred=False):
         s = int(output["start_coords"][ii])
@@ -798,23 +704,16 @@ def genomeplot_256Mb(
         return im
 
     current_row = 0
-    for ii, ax in enumerate(reversed(all_axes[current_row])):
-        im = _plot_pred(ii, ax, 0, key="predictions", maskpred=maskpred)
-
-    current_row += 1
-    if output["experiments"]:
+    for model_i in range(len(output["predictions"])):
         for ii, ax in enumerate(reversed(all_axes[current_row])):
-            im = _plot_pred(ii, ax, 0, key="experiments")
-        current_row += 1
+            im = _plot_pred(ii, ax, model_i, key="predictions", maskpred=maskpred)
 
-    for ii, ax in enumerate(reversed(all_axes[current_row])):
-        im = _plot_pred(ii, ax, 1, key="predictions", maskpred=maskpred)
-    current_row += 1
-
-    if output["experiments"]:
-        for ii, ax in enumerate(reversed(all_axes[current_row])):
-            im = _plot_pred(ii, ax, 1, key="experiments", maskpred=maskpred)
         current_row += 1
+        if output["experiments"]:
+            for ii, ax in enumerate(reversed(all_axes[current_row])):
+                im = _plot_pred(ii, ax, model_i, key="experiments")
+            current_row += 1
+
 
     if colorbar:
         fig.colorbar(im, ax=all_axes.ravel().tolist(), fraction=0.02, shrink=0.1, pad=0.005)
