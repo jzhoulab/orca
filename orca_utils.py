@@ -593,7 +593,7 @@ def genomeplot(
             gbfigs.append(plt.gcf())
 
             os.remove(f"/dev/shm/{filename}.png")
-            os.remove(f"/dev/shm/{filename}.ini")
+        os.remove(f"/dev/shm/{filename}.ini")
 
         if file is not None:
             with PdfPages(file) as pdf:
