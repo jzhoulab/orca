@@ -306,11 +306,12 @@ class Genomic2DFeatures(Target):
 
     Parameters
     ----------
-    input_paths : list(str)
-        List of paths to the Cooler datasets. For mcool files, 
+    input_paths : list(str) or str
+        List of paths to the Cooler datasets or a path to a single 
+        Cooler dataset. For mcool files, 
         the path should include the resolution. Please refer to 
         cooler.Cooler documentation for support of mcool files.
-    features : list(str)
+    features : list(str) or str
         The list of dataset names that should match the `input_path`.
     shape : tuple(int, int)
         The shape of the output array (# of bins by # of bins).
@@ -337,6 +338,10 @@ class Genomic2DFeatures(Target):
         """
         Constructs a new `Genomic2DFeatures` object.
         """
+        if isinstance(input_paths, str) and isinstance(features, str):
+            input_paths = [input_paths]
+            features = [features]
+
         self.input_paths = input_paths
         self._initialized = False
 
