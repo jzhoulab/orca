@@ -97,7 +97,7 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
 """
     global hg38, target_hff, target_h1esc, target_hff_256m, target_h1esc_256m, target_hff_1m, target_h1esc_1m, target_available
 
-    if "32M" or "32m" in models:
+    if "32M" in models or "32m" in models:
         global h1esc, hff
         h1esc = H1esc()
         h1esc.eval()
@@ -112,7 +112,7 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
         model_dict_global["h1esc"] = h1esc
         model_dict_global["hff"] = hff
 
-    if "1M" or "1m" in models:
+    if "1M" in models or "1m" in models:
         global h1esc_1m, hff_1m
         h1esc_1m = H1esc_1M()
         h1esc_1m.eval()
@@ -127,7 +127,7 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
         model_dict_global["h1esc_1m"] = h1esc_1m
         model_dict_global["hff_1m"] = hff_1m
 
-    if "256M" or "256m" in models:
+    if "256M" in models or "256m" in models:
         global h1esc_256m, hff_256m
         h1esc_256m = H1esc_256M()
         h1esc_256m.eval()
