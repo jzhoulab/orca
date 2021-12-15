@@ -113,7 +113,7 @@ class MemmapGenome(Genome):
                     )
                 )
             elif self.blacklist_regions is not None:  # user-specified file
-                self._blacklist_tabix = tabix.open(blacklist_regions)
+                self._blacklist_tabix = tabix.open(self.blacklist_regions)
 
             self.lens = np.array([self.len_chrs[c] for c in self.chrs])
             self.inds = {
