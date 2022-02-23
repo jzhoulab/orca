@@ -305,7 +305,7 @@ def genomepredict(
         for iii, seq in enumerate(
             [
                 torch.FloatTensor(sequence),
-                torch.FloatTensor(np.ascontiguousarray(sequence[:, ::-1, ::-1])),
+                torch.FloatTensor(sequence[:, ::-1, ::-1].copy()),
             ]
         ):
             for ii, model in enumerate(models):
@@ -328,10 +328,10 @@ def genomepredict(
 
                 def eval_step(level, start, coarse_pred=None):
                     distenc = torch.log(
-                        torch.FloatTensor(model.normmats[level][None, None, :, :]).cuda()
+                        torch.FloatTensor(model.normmats[level][(None,)*(4-model.normmats[level].ndim)]).cuda()
                         if use_cuda
-                        else torch.FloatTensor(model.normmats[level][None, None, :, :])
-                    ).expand(sequence.shape[0], 1, 250, 250)
+                        else torch.FloatTensor(model.normmats[level][(None,)*(4-model.normmats[level].ndim)])
+                    ).expand(sequence.shape[0], -1, -1, -1)
                     if coarse_pred is not None:
                         if level == 1:
                             pred = model.denets[level].forward(
@@ -619,7 +619,8 @@ def genomepredict_256Mb(
                 if m in model_dict_global:
                     model_objs.append(model_dict_global[m])
     models = model_objs
-
+    n_models = len(models)
+    
     with torch.no_grad():
         allpreds = []
         allstarts = []
@@ -632,7 +633,7 @@ def genomepredict_256Mb(
         for iii, seq in enumerate(
             [
                 torch.FloatTensor(sequence),
-                torch.FloatTensor(np.ascontiguousarray(sequence[:, ::-1, ::-1])),
+                torch.FloatTensor(sequence[:, ::-1, ::-1].copy()),
             ]
         ):
             for ii, model in enumerate(models):
@@ -665,7 +666,7 @@ def genomepredict_256Mb(
                         torch.FloatTensor(ns[level][None, :, :]).cuda()
                         if use_cuda
                         else torch.FloatTensor(ns[level][None, :, :])
-                    ).expand(sequence.shape[0], 1, 250, 250)
+                    ).expand(sequence.shape[0], -1, -1, -1)
                     if coarse_pred is not None:
                         pred = model.denets[level].forward(
                             encodings[level][
@@ -2380,7 +2381,7 @@ def process_ins(
                 normmat_regionlist=[[mchr, wpos - window_radius, wpos + window_radius, "+"]],
             )
 
-    if mpos > wpos + window_radius:
+    if mpos > wpos - window_radius:
         anno_scaled = process_anno(
             [[mpos, mpos + len(ins_seq), "gray"]],
             base=wpos - window_radius,

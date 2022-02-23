@@ -14,7 +14,7 @@ Blocksize = 4000 * 200
 
 
 class Decoder(nn.Module):
-    def __init__(self):
+    def __init__(self, upsample_mode='nearest'):
         """
         Orca decoder architecture.
         """
@@ -427,7 +427,7 @@ class Decoder(nn.Module):
             nn.Conv2d(5, 1, kernel_size=(1, 1), padding=0, dilation=1),
         )
 
-        self.upsample = nn.Upsample(scale_factor=(2, 2))
+        self.upsample = nn.Upsample(scale_factor=(2, 2), mode=upsample_mode)
         self.lcombiner = nn.Sequential(
             nn.Dropout(p=0.1),
             nn.Conv2d(65, 64, kernel_size=(3, 3), padding=1),
@@ -980,6 +980,7 @@ class Encoder(nn.Module):
         return out
 
 
+
 class Encoder2(nn.Module):
     def __init__(self):
         """
@@ -987,6 +988,196 @@ class Encoder2(nn.Module):
         128kb resolution)
         """
         super(Encoder2, self).__init__()
+        self.lblocks = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.MaxPool1d(kernel_size=2, stride=2),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                ),
+                nn.Sequential(
+                    nn.MaxPool1d(kernel_size=2, stride=2),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                ),
+                nn.Sequential(
+                    nn.MaxPool1d(kernel_size=2, stride=2),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                ),
+                nn.Sequential(
+                    nn.MaxPool1d(kernel_size=2, stride=2),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                ),
+                nn.Sequential(
+                    nn.MaxPool1d(kernel_size=2, stride=2),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                ),
+            ]
+        )
+
+        self.blocks = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(inplace=True),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(inplace=True),
+                ),
+                nn.Sequential(
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(inplace=True),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(inplace=True),
+                ),
+                nn.Sequential(
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(inplace=True),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(inplace=True),
+                ),
+                nn.Sequential(
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(inplace=True),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(inplace=True),
+                ),
+                nn.Sequential(
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(inplace=True),
+                    nn.Conv1d(128, 128, kernel_size=9, padding=4),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(inplace=True),
+                ),
+            ]
+        )
+
+
+        self.downlblocks = nn.ModuleList([
+    
+            nn.Sequential(
+            nn.Upsample(scale_factor=2),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128)),
+
+            nn.Sequential(
+            nn.Upsample(scale_factor=2),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128)),
+
+            nn.Sequential(
+            nn.Upsample(scale_factor=2),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128)),
+
+            nn.Sequential(
+            nn.Upsample(scale_factor=2),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128)),
+
+            nn.Sequential(
+            nn.Upsample(scale_factor=2),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128))])
+
+        self.downblocks = nn.ModuleList([
+            nn.Sequential(
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.ReLU(inplace=True)),
+
+            nn.Sequential(
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.ReLU(inplace=True)),
+
+            nn.Sequential(
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.ReLU(inplace=True)),
+
+            nn.Sequential(
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.ReLU(inplace=True)),
+
+            nn.Sequential(
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.ReLU(inplace=True)),
+        ])
+
+    def forward(self, x):
+        """Forward propagation of a batch."""
+        out = x
+
+        encodings = [out]
+        for lconv, conv in zip(self.lblocks, self.blocks):
+            lout = lconv(out)
+            out = conv(lout) + lout
+            encodings.append(out)
+
+        encodings2 = [out]
+        for enc, lconv, conv in zip(reversed(encodings[:-1]), self.downlblocks, 
+self.downblocks):
+            lout = lconv(out)
+            out = conv(lout) + lout
+            out = enc + out
+            encodings2.append(out)
+        encodings2.reverse()
+        return encodings2
+
+
+
+class Encoder2b(nn.Module):
+    def __init__(self):
+        """
+        The second section of the Orca Encoder (4kb resolution to
+        128kb resolution). This is the simpler version of Encoder2
+        without additional downward pass used in HCTnoc model.
+        """
+        super(Encoder2b, self).__init__()
         self.lblocks = nn.ModuleList(
             [
                 nn.Sequential(
@@ -1147,9 +1338,55 @@ class Encoder3(nn.Module):
             ]
         )
 
+
+        self.downlblocks = nn.ModuleList([
+    
+            nn.Sequential(
+            nn.Upsample(scale_factor=2),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128)),
+
+            nn.Sequential(
+            nn.Upsample(scale_factor=2),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128)),
+
+            nn.Sequential(
+            nn.Upsample(scale_factor=2),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128))])
+
+        self.downblocks = nn.ModuleList([
+            nn.Sequential(
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.ReLU(inplace=True)),
+
+            nn.Sequential(
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.ReLU(inplace=True)),
+
+            nn.Sequential(
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.BatchNorm1d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(128, 128, kernel_size=9, padding=4),
+            nn.ReLU(inplace=True)),
+        ])
+
     def forward(self, x):
-        """Forward propagation of a batch.
-        """
+        """Forward propagation of a batch."""
         out = x
 
         encodings = [out]
@@ -1158,7 +1395,15 @@ class Encoder3(nn.Module):
             out = conv(lout) + lout
             encodings.append(out)
 
-        return encodings
+        encodings2 = [out]
+        for enc, lconv, conv in zip(reversed(encodings[:-1]), self.downlblocks, 
+self.downblocks):
+            lout = lconv(out)
+            out = conv(lout) + lout
+            out = enc + out
+            encodings2.append(out)
+        encodings2.reverse()
+        return encodings2
 
 
 class Net(nn.Module):

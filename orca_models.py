@@ -8,9 +8,10 @@ import numpy as np
 import torch
 from torch import nn
 
-from orca_modules import Encoder, Encoder2, Encoder3, Decoder, Decoder_1m, Net
+from orca_modules import Encoder, Encoder2, Encoder2b, Encoder3, Decoder, Decoder_1m, Net
 
 ORCA_PATH = str(pathlib.Path(__file__).parent.absolute())
+
 
 
 class H1esc(nn.Module):
@@ -41,59 +42,59 @@ class H1esc(nn.Module):
         super(H1esc, self).__init__()
         modelstr = "h1esc"
         self.net = nn.DataParallel(Encoder2())
-        self.denet_1 = nn.DataParallel(Decoder())
-        self.denet_2 = nn.DataParallel(Decoder())
-        self.denet_4 = nn.DataParallel(Decoder())
-        self.denet_8 = nn.DataParallel(Decoder())
-        self.denet_16 = nn.DataParallel(Decoder())
-        self.denet_32 = nn.DataParallel(Decoder())
+        self.denet_1 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_2 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_4 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_8 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_16 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_32 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
 
         num_threads = torch.get_num_threads()
         self.net.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".net.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.net.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_1.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d1.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d1.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_2.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d2.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d2.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_4.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d4.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d4.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_8.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d8.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d8.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_16.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d16.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d16.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_32.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d32.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d32.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
@@ -202,62 +203,62 @@ class Hff(nn.Module):
         super(Hff, self).__init__()
         modelstr = "hff"
         self.net = nn.DataParallel(Encoder2())
-        self.denet_1 = nn.DataParallel(Decoder())
-        self.denet_2 = nn.DataParallel(Decoder())
-        self.denet_4 = nn.DataParallel(Decoder())
-        self.denet_8 = nn.DataParallel(Decoder())
-        self.denet_16 = nn.DataParallel(Decoder())
-        self.denet_32 = nn.DataParallel(Decoder())
+        self.denet_1 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_2 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_4 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_8 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_16 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_32 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
 
         num_threads = torch.get_num_threads()
         self.net.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".net.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.net.statedict",
                 map_location=torch.device("cpu"),
             ),
-            strict=False,
+            strict=True,
         )
         self.denet_1.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d1.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d1.statedict",
                 map_location=torch.device("cpu"),
             ),
-            strict=False,
+            strict=True,
         )
         self.denet_2.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d2.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d2.statedict",
                 map_location=torch.device("cpu"),
             ),
-            strict=False,
+            strict=True,
         )
         self.denet_4.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d4.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d4.statedict",
                 map_location=torch.device("cpu"),
             ),
-            strict=False,
+            strict=True,
         )
         self.denet_8.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d8.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d8.statedict",
                 map_location=torch.device("cpu"),
             ),
-            strict=False,
+            strict=True,
         )
         self.denet_16.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d16.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d16.statedict",
                 map_location=torch.device("cpu"),
             ),
-            strict=False,
+            strict=True,
         )
         self.denet_32.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d32.statedict",
+                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d32.statedict",
                 map_location=torch.device("cpu"),
             ),
-            strict=False,
+            strict=True,
         )
 
         self.net0 = nn.DataParallel(Encoder())
@@ -331,7 +332,6 @@ class Hff(nn.Module):
         }
         torch.set_num_threads(num_threads)
 
-
 class HCTnoc(nn.Module):
     """
     Orca cohesin-depleted HCT116 model (1-32Mb) 
@@ -360,7 +360,7 @@ class HCTnoc(nn.Module):
         super(HCTnoc, self).__init__()
         modelstr = "hctnoc"
 
-        self.net = nn.DataParallel(Encoder2())
+        self.net = nn.DataParallel(Encoder2b())
         self.denet_1 = nn.DataParallel(Decoder())
         self.denet_2 = nn.DataParallel(Decoder())
         self.denet_4 = nn.DataParallel(Decoder())
@@ -573,39 +573,39 @@ class H1esc_256M(nn.Module):
         super(H1esc_256M, self).__init__()
         modelstr = "h1esc_256m"
         self.net = nn.DataParallel(Encoder3())
-        self.denet_32 = nn.DataParallel(Decoder())
-        self.denet_64 = nn.DataParallel(Decoder())
-        self.denet_128 = nn.DataParallel(Decoder())
-        self.denet_256 = nn.DataParallel(Decoder())
+        self.denet_32 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_64 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_128 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_256 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
 
         num_threads = torch.get_num_threads()
         self.net.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".net.statedict",
+                ORCA_PATH + "/models/orca_h1esc_256m.net.statedict",
                 map_location=torch.device("cpu"),
             )
         )
         self.denet_32.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d32.statedict",
+                ORCA_PATH + "/models/orca_h1esc_256m.d32.statedict",
                 map_location=torch.device("cpu"),
             )
         )
         self.denet_64.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d64.statedict",
+                ORCA_PATH + "/models/orca_h1esc_256m.d64.statedict",
                 map_location=torch.device("cpu"),
             )
         )
         self.denet_128.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d128.statedict",
+                ORCA_PATH + "/models/orca_h1esc_256m.d128.statedict",
                 map_location=torch.device("cpu"),
             )
         )
         self.denet_256.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d256.statedict",
+                ORCA_PATH + "/models/orca_h1esc_256m.d256.statedict",
                 map_location=torch.device("cpu"),
             )
         )
@@ -681,39 +681,39 @@ class Hff_256M(nn.Module):
         modelstr = "hff_256m"
 
         self.net = nn.DataParallel(Encoder3())
-        self.denet_32 = nn.DataParallel(Decoder())
-        self.denet_64 = nn.DataParallel(Decoder())
-        self.denet_128 = nn.DataParallel(Decoder())
-        self.denet_256 = nn.DataParallel(Decoder())
+        self.denet_32 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_64 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_128 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
+        self.denet_256 = nn.DataParallel(Decoder(upsample_mode='bilinear'))
 
         num_threads = torch.get_num_threads()
         self.net.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".net.statedict",
+                ORCA_PATH + "/models/orca_hff_256m.net.statedict",
                 map_location=torch.device("cpu"),
             )
         )
         self.denet_32.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d32.statedict",
+                ORCA_PATH + "/models/orca_hff_256m.d32.statedict",
                 map_location=torch.device("cpu"),
             )
         )
         self.denet_64.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d64.statedict",
+                ORCA_PATH + "/models/orca_hff_256m.d64.statedict",
                 map_location=torch.device("cpu"),
             )
         )
         self.denet_128.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d128.statedict",
+                ORCA_PATH + "/models/orca_hff_256m.d128.statedict",
                 map_location=torch.device("cpu"),
             )
         )
         self.denet_256.load_state_dict(
             torch.load(
-                ORCA_PATH + "/models/orca_" + modelstr + ".d256.statedict",
+                ORCA_PATH + "/models/orca_hff_256m.d256.statedict",
                 map_location=torch.device("cpu"),
             )
         )
