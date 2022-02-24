@@ -1,8 +1,13 @@
 This directory provides training scripts for Orca models. 
 
-For training Orca models, the minimal required input is a mcool file mapped to hg38 genome with resolutions including 1000, 4000, 32000 (you can use cooler zoomify to generate different resolution). You can optionally supply chromatin annotation tracks, such as CTCF binding sites, DHS sites, and histone marks to simutaneously train the sequence encoding to predict those tracks (note that these tracks are used as auxiliary prediction targets for training the encoder, but are never used as input to the models). You can use other genomes but you will need to supply the reference genome fasta file and change the paths in the scripts to use that file. In addition, haplotypes and unlocalized/unplaced assembly should be removed from the reference genome fasta file.
+### Data preparation
+For training Orca models, the minimal required input is a mcool file mapped to hg38 genome with resolutions including 1000bp (for 1Mb model), 4000bp(for 1-32Mb model), and 32000bp (for 32-256Mb model). You can use cooler zoomify to generate different resolutions. You can optionally supply chromatin annotation tracks, such as CTCF binding sites, DHS sites, and histone marks to simutaneously train the sequence encoding to predict those tracks (note that these tracks are used as auxiliary prediction targets for training the encoder, but are never used as input to the models). You can use other genomes but you will need to supply the reference genome fasta file and change the paths in the scripts to use that file. In addition, haplotypes and unlocalized/unplaced assembly should be removed from the reference genome fasta file.
+
+The training also requires expectation file at 1000bp, 4000bp, and 32000bp (background normalized contact score at each distance). You can compute them with `cooltools compute-expected` (compute for both cis/intrachromosomal and trans/interchromosomal interactions) and use https://github.com/jzhoulab/orca/blob/main/misc/process_expectation.py to convert the output file input the npy input that training scripts take (the script currently requires trans expectation file to be named in a specific way i.e. the input file with a .trans suffix; you don't have to provide trans file unless you are preparing the 32000bp resolution input for 32-256Mb model) .
 
 The mcool files used for training released Orca models can be downloaded from the resource file links we provided. (see README of this repository).
+
+### Training procedures
 
 To speed up genome sequence retrieval, the training scripts use a memory-mapped genome file. Run `python misc/make_genome_memmap.py` before you use the training scripts (47Gb space needed). The generated memmap file will also be automatically used by the orce_predict module to speed up other functions too.
 
