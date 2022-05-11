@@ -52,49 +52,49 @@ class H1esc(nn.Module):
         num_threads = torch.get_num_threads()
         self.net.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.net.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".net.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_1.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d1.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d1.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_2.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d2.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d2.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_4.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d4.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d4.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_8.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d8.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d8.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_16.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d16.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d16.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_32.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_h1esc.d32.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d32.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
@@ -213,49 +213,49 @@ class Hff(nn.Module):
         num_threads = torch.get_num_threads()
         self.net.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.net.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".net.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_1.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d1.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d1.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_2.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d2.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d2.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_4.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d4.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d4.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_8.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d8.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d8.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_16.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d16.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d16.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
         )
         self.denet_32.load_state_dict(
             torch.load(
-                "/archive/bioinformatics/Zhou_lab/shared/jzhou/graphseq/release/orca/models/orca_hff.d32.statedict",
+                ORCA_PATH + "/models/orca_" + modelstr + ".d32.statedict",
                 map_location=torch.device("cpu"),
             ),
             strict=True,
