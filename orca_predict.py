@@ -2956,6 +2956,7 @@ if __name__ == "__main__":
     from docopt import docopt
     import sys
     import os
+    import re
 
     doc = """
     Orca multiscale genome interaction sequence model prediction tool.
@@ -2968,20 +2969,23 @@ if __name__ == "__main__":
     orca_predict break [options] <coordinate> <output_dir>
 
     Options:
-    -h --help       Show this screen.
-    --show_genes    Show gene annotation (only supported for 32Mb models).
-    --show_tracks   Show chromatin tracks (only supported for 32Mb models).
-    --256m          Use 256Mb models (default is 32Mb).
-    --nocuda        Use CPU implementation. 
-    --version       Show version.
+    -h --help        Show this screen.
+    --show_genes     Show gene annotation (only supported for 32Mb models).
+    --show_tracks    Show chromatin tracks (only supported for 32Mb models).
+    --256m           Use 256Mb models (default is 32Mb).
+    --nocuda         Use CPU implementation.
+    --coor_filename  Include coordinate in the output filenames.
+    --version        Show version.
     """
     if len(sys.argv) == 1:
         sys.argv.append("-h")
     arguments = docopt(doc, version="Orca v0.1")
+    print(arguments)
     show_genes = arguments["--show_genes"]
     show_tracks = arguments["--show_tracks"]
     window_radius = 128000000 if arguments["--256m"] else 16000000
     use_cuda = not arguments["--nocuda"]
+    coor_filename = arguments["--coor_filename"]
 
     load_resources(models=["32M"], use_cuda=use_cuda)
 
@@ -2995,7 +2999,12 @@ if __name__ == "__main__":
         predtype = "inv"
     elif arguments["break"]:
         predtype = "break"
-
+    
+    if coor_filename:
+        suffix = "_" + re.sub(r'[\\/*?:"<>|]', "_", arguments["<coordinate>"])
+    else:
+        suffix = ""
+    
     def predict(chrm, start, end, savedir):
 
         if not os.path.exists(savedir):
@@ -3008,33 +3017,33 @@ if __name__ == "__main__":
                 end,
                 hg38,
                 target=target_available,
-                file=savedir + "/orca_pred",
+                file=savedir + "/orca_pred" + suffix,
                 show_genes=show_genes,
                 show_tracks=show_tracks,
                 window_radius=window_radius,
                 padding_chr="chr1",
                 use_cuda=use_cuda,
             )
-        torch.save(outputs, savedir + "/orca_pred.pth")
+        torch.save(outputs, savedir + "/orca_pred" + suffix+ ".pth")
         return None
 
     def get_interactions(predtype, content, savedir):
 
         if predtype == "region":
-            pdf_names = ["orca_pred.pdf"]
+            pdf_names = ["orca_pred" + suffix+ ".pdf"]
             if show_genes or show_tracks:
-                pdf_names += ["orca_pred.anno.pdf"]
+                pdf_names += ["orca_pred" + suffix+ ".anno.pdf"]
             chrstr, coordstr = str(content).split(":")
             chrstr = "chr" + chrstr.replace("chr", "")
             coord_s, coord_e = coordstr.split("-")
             predict(chrstr, int(coord_s), int(coord_e), savedir)
         elif predtype in ["dup", "del"]:
-            pdf_names = ["orca_pred.ref.l.pdf", "orca_pred.ref.r.pdf", "orca_pred.alt.pdf"]
+            pdf_names = ["orca_pred" + suffix + ".ref.l.pdf", "orca_pred" + suffix + ".ref.r.pdf", "orca_pred" + suffix + ".alt.pdf"]
             if show_genes or show_tracks:
                 pdf_names += [
-                    "orca_pred.ref.l.anno.pdf",
-                    "orca_pred.ref.r.anno.pdf",
-                    "orca_pred.alt.anno.pdf",
+                    "orca_pred" + suffix + "d.ref.l.anno.pdf",
+                    "orca_pred" + suffix + ".ref.r.anno.pdf",
+                    "orca_pred" + suffix + ".alt.anno.pdf",
                 ]
             chrstr, coordstr = str(content).split(":")
             chrstr = "chr" + chrstr.replace("chr", "")
@@ -3052,7 +3061,7 @@ if __name__ == "__main__":
                     target=target_available,
                     show_genes=show_genes,
                     show_tracks=show_tracks,
-                    file=savedir + "/orca_pred",
+                    file=savedir + "/orca_pred" + suffix,
                     window_radius=window_radius,
                     use_cuda=use_cuda,
                 )
@@ -3065,7 +3074,7 @@ if __name__ == "__main__":
                     target=target_available,
                     show_genes=show_genes,
                     show_tracks=show_tracks,
-                    file=savedir + "/orca_pred",
+                    file=savedir + "/orca_pred" + suffix,
                     window_radius=window_radius,
                     use_cuda=use_cuda,
                 )
@@ -3079,17 +3088,17 @@ if __name__ == "__main__":
             )
         elif predtype == "inv":
             pdf_names = [
-                "orca_pred.ref.l.pdf",
-                "orca_pred.ref.r.pdf",
-                "orca_pred.alt.l.pdf",
-                "orca_pred.alt.r.pdf",
+                "orca_pred" + suffix + ".ref.l.pdf",
+                "orca_pred" + suffix + ".ref.r.pdf",
+                "orca_pred" + suffix + ".alt.l.pdf",
+                "orca_pred" + suffix + ".alt.r.pdf",
             ]
             if show_genes or show_tracks:
                 pdf_names += [
-                    "orca_pred.ref.l.anno.pdf",
-                    "orca_pred.ref.r.anno.pdf",
-                    "orca_pred.alt.l.anno.pdf",
-                    "orca_pred.alt.r.anno.pdf",
+                    "orca_pred" + suffix + ".ref.l.anno.pdf",
+                    "orca_pred" + suffix + ".ref.r.anno.pdf",
+                    "orca_pred" + suffix + ".alt.l.anno.pdf",
+                    "orca_pred" + suffix + ".alt.r.anno.pdf",
                 ]
             chrstr, coordstr = str(content).split(":")
             chrstr = "chr" + chrstr.replace("chr", "")
@@ -3106,7 +3115,7 @@ if __name__ == "__main__":
                 target=target_available,
                 show_genes=show_genes,
                 show_tracks=show_tracks,
-                file=savedir + "/orca_pred",
+                file=savedir + "/orca_pred" + suffix,
                 window_radius=window_radius,
                 use_cuda=use_cuda,
             )
@@ -3118,15 +3127,15 @@ if __name__ == "__main__":
                     "outputs_alt_l": outputs_alt_l,
                     "outputs_alt_r": outputs_alt_r,
                 },
-                savedir + "/orca_pred.pth",
+                savedir + "/orca_pred" + suffix + ".pth",
             )
         elif predtype == "break":
             pdf_names = ["orca_pred.ref.1.pdf", "orca_pred.ref.2.pdf", "orca_pred.alt.pdf"]
             if show_genes or show_tracks:
                 pdf_names += [
-                    "orca_pred.ref.1.anno.pdf",
-                    "orca_pred.ref.2.anno.pdf",
-                    "orca_pred.alt.anno.pdf",
+                    "orca_pred" + suffix + ".ref.1.anno.pdf",
+                    "orca_pred" + suffix + ".ref.2.anno.pdf",
+                    "orca_pred" + suffix + ".alt.anno.pdf",
                 ]
             chr_coord_1, chr_coord_2, orientations = str(content.replace("\t", " ")).split(" ")
             chr1, coord1 = chr_coord_1.split(":")
@@ -3149,7 +3158,7 @@ if __name__ == "__main__":
                 target=target_available,
                 show_genes=show_genes,
                 show_tracks=show_tracks,
-                file=savedir + "/orca_pred",
+                file=savedir + "/orca_pred" + suffix,
                 window_radius=window_radius,
                 use_cuda=use_cuda,
             )
@@ -3160,7 +3169,7 @@ if __name__ == "__main__":
                     "outputs_ref_2": outputs_ref_2,
                     "outputs_alt": outputs_alt,
                 },
-                savedir + "/orca_pred.pth",
+                savedir + "/orca_pred" + suffix + ".pth",
             )
         else:
             raise ValueError("Unexpected prediction type!")
