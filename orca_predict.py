@@ -2980,7 +2980,6 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         sys.argv.append("-h")
     arguments = docopt(doc, version="Orca v0.1")
-    print(arguments)
     show_genes = arguments["--show_genes"]
     show_tracks = arguments["--show_tracks"]
     window_radius = 128000000 if arguments["--256m"] else 16000000
