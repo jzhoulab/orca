@@ -165,6 +165,21 @@ Example alternative sequence predictions for duplication variant (right boundary
 
 If you ask Orca to generate gene annotations or chromatin tracks,  you will also find annotation pdf outputs files which correspond to the same multi-level regions the genome interaction predictions are made on.
 
+Besides graphical output, we also save the numerical predictions in PyTorch serialization format (pickle) with extension '.pth'. The .pth file can be loaded with `torch.load` or other pickle file loading function. Each file contains a python dictionary. If the prediction mode is one of the structural variant prediction modes, the dictionary stores multiple dictionaries each corresponding to an output file as described above. The dictionary includes:
+
+`predictions` - Multi-level predictions for H1-ESC and HFF cell types.
+
+`experiments` - Observations for H1-ESC and HFF cell types that matches the predictions (only available for reference allele).
+
+`chr` - The chromosome name
+
+`start_coords` - Start coordinates for the prediction at each level.
+
+`end_coords` - End coordinates for the prediction at each level.
+
+`annos` - Annotation information. A list indicating the relative variant positions for each interaction matrix, saved for plotting purpose.
+
+
 ### Train Orca models
 
 If you have set up Orca with its dependencies and has the necessary GPU resources (we have only done training on 4x V100 32Gb servers), you can train new models following the example code under the `train` directory to train new Orca models.  
