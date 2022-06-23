@@ -197,5 +197,6 @@ You can access these datasets with 4DN accession IDs 4DNFI9GMP2J8 (H1-ESC;  Krie
 It depends on your application. If you only need predictions for a few variants,  or if you only need the 1Mb model, CPU may be enough. If you need to predict more than a couple dozens of variants, then GPU is highly recommended (>8GB RAM needed).
 
 
+
 ### Questions and feedbacks
-Thank you very much for using Orca. If you have any question or feedback, you can let us know at orca-user@googlegroups.com. If you found a bug, you can file a Github issue with details for reproducing the bug.
+Thank you very much for using Orca. If you have any question or feedback, you can let us know at orca-user@googlegroups.com. If you found a bug, you can file a Github issue with details for reproducing the bug. Orca is completely free for any non-commercial and academic use, please contact us for other applications.
