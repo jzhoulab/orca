@@ -108,10 +108,10 @@ from selene_sdk.sequences import Genome
 #mpos: specifies the coordinate to zoom into for multiscale prediction
 #wpos: specifies the coordinate of the center position of the sequence. 
 #chrom: chromosome name
-outputs = genomepredict(Genome.sequence_to_encoding(sequence), chrom, mpos=pos, wpos=wpos, use_cuda=True)
+outputs = genomepredict(Genome.sequence_to_encoding(sequence)[None,:,:], chrom, mpos=pos, wpos=wpos, use_cuda=True)
 
 #For 256Mb sequence. See the docs for details of the input 
-outputs = genomepredict_256Mb(Genome.sequence_to_encoding(sequence), chrom, normmats, chrlen, mpos=pos, wpos=wpos, use_cuda=True)
+outputs = genomepredict_256Mb(Genome.sequence_to_encoding(sequence)[None,:,:], chrom, normmats, chrlen, mpos=pos, wpos=wpos, use_cuda=True)
 ```
 
 For full information about using Orca,  you may visit our API documentation page (http://jzhoulab.github.io/orca-docs/).
