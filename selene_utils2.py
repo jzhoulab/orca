@@ -263,7 +263,7 @@ class MemmapGenome(Genome):
             such as when end > chromosome length and pad=False
         """
         encoding = self.get_encoding_from_coords(chrom, start, end, strand=strand, pad=strand)
-        return encoding.T, np.any(encoding[0, :] == 0.25)
+        return encoding, np.any(encoding[0, :] == 0.25)
 
 
 def _adaptive_coarsegrain(ar, countar, max_levels=12):
