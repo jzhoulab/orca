@@ -61,11 +61,17 @@ You can use Orca through either the command-line-interface (CLI) which supports 
 
 For using Orca from python, you can just add the directory you cloned to your python PATH `sys.path.append(ORCA_PATH)` and use it (for now we haven't made Orca a python package, because most of its functionalities depends on the resource files which is rather large).  The full API documentation is available [here](http://jzhoulab.github.io/orca-docs/).
 
+To use Orca for any prediciton tasks, the first step is to load the models. The following scripts load the Orca models (32Mb and 256Mb).  
+
 ```python
 import orca_predict
 #Default is using GPU. Set use_cuda = False in load_resources to use CPU.
 orca_predict.load_resources(models=['32M', '256M'])
-#import loaded resources
+```
+
+For predicting multiscale 3D genome effects of simple structural variants, here are some examples:
+
+```python
 from orca_predict import *
 
 #duplication variant
