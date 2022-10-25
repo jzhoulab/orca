@@ -1061,7 +1061,7 @@ def process_region(
     elif window_radius == 128000000:
         chrlen_round = chrlen - chrlen % 32000
         wpos = 128000000
-        if has_target:
+        if target:
             sequence, normmats, targets = _retrieve_multi(
                 [[mchr, 0, chrlen_round, "+"], [padding_chr, 0, 256000000 - chrlen_round, "+"]],
                 genome,
@@ -2986,7 +2986,7 @@ if __name__ == "__main__":
     use_cuda = not arguments["--nocuda"]
     coor_filename = arguments["--coor_filename"]
 
-    load_resources(models=["32M"], use_cuda=use_cuda)
+    load_resources(models=["256M" if arguments["--256m"] else "32M"], use_cuda=use_cuda)
 
     if arguments["region"]:
         predtype = "region"
