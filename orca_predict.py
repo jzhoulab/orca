@@ -2,8 +2,10 @@
 This module provides functions for using Orca models for various
 types of the predictions. This is the main module that you need for 
 interacting with Orca models.
+
 To use any of the prediction functions, `load_resources` has to be
 called first to load the necessary resources.
+
 The coordinates used in Orca are 0-based, inclusive for the start
 coordinate and exclusive for the end coordinate, consistent with
 python conventions. 
@@ -40,6 +42,7 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
     Load resourced are accessible as global variables.
     
     The list of globl variables generated is here:
+
     Global Variables
     ----------------
     hg38 : selene_utils2.MemmapGenome or selene_sdk.sequences.Genome
@@ -77,6 +80,7 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
         at 1kb resolution, used for comparison with 1Mb models.
     target_available : bool
         Indicate whether the micro-C dataset resource file is available.
+
     Parameters
     ----------
     models : list(str)
@@ -88,6 +92,7 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
     use_memmapgenome : bool, optional
         Default is True. If True and the resource file for hg38 mmap exists,
         use MemmapGenome instead of Genome.
+
  
 """
     global hg38, target_hff, target_h1esc, target_hff_256m, target_h1esc_256m, target_hff_1m, target_h1esc_1m, target_available
@@ -212,8 +217,10 @@ def genomepredict(
     of 32Mb, 16Mb, 8Mb, 4Mb, 2Mb and 1Mb predictions with increasing
     resolutions (up to 4kb). This function also processes 
     information used only for plotting including targets and annotation.
+
     For larger sequence and interchromosomal predictions, you can use 
     256Mb input with genomepredict_256Mb.
+
     Parameters
     ----------
     sequence : numpy.ndarray
@@ -269,6 +276,8 @@ def genomepredict(
             - annos : list(list(...))
                 Annotation information. The format is as outputed by orca_utils.process_anno
                 Exists if `annotation` is specified.
+
+
     """
     model_objs = []
     for m in models:
@@ -531,9 +540,11 @@ def genomepredict_256Mb(
     of 256Mb, 128Mb, 64Mb, and 32Mb predictions with increasing
     resolutions (up to 128kb). This function also processes 
     information used only for plotting including targets and annotation.
+
     This function accepts multichromosal input sequence. Thus it needs an
     extra input `normmats` to encode the chromosomal information. See documentation
     for normmats argument for details.
+
     Parameters
     ----------
     sequence : numpy.ndarray
@@ -967,6 +978,7 @@ def process_region(
     """
     Generate multiscale genome interaction predictions for 
     the specified region. 
+
     Parameters
     ----------
     mchr : str
@@ -1002,6 +1014,7 @@ def process_region(
         extracted from the padding_chr.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
+
     Returns
     -------
     outputs_ref_l, outputs_ref_r, outputs_alt : dict, dict, dict
@@ -1015,6 +1028,7 @@ def process_region(
         retrieved information. These dictionaries can be directly used as
         input to genomeplot or genomeplot_256Mb. See documentation of `genomepredict` or `genomepredict_256Mb` for
         details of the dictionary content.
+
     """
     chrlen = [l for c, l in genome.get_chr_lens() if c == mchr].pop()
     mpos = int((int(mstart) + int(mend)) / 2)
@@ -1145,6 +1159,7 @@ def process_dup(
     """
     Generate multiscale genome interaction predictions for 
     an duplication variant. 
+
     Parameters
     ----------
     mchr : str
@@ -1180,6 +1195,7 @@ def process_dup(
         extracted from the padding_chr.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
+
     Returns
     -------
     outputs_ref_l, outputs_ref_r, outputs_alt : dict, dict, dict
@@ -1473,6 +1489,7 @@ def process_del(
     """
     Generate multiscale genome interaction predictions for 
     an deletion variant. 
+
     Parameters
     ----------
     mchr : str
@@ -1508,6 +1525,7 @@ def process_del(
         extracted from the padding_chr.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
+
     Returns
     -------
     outputs_ref_l, outputs_ref_r, outputs_alt : dict, dict, dict
@@ -1771,6 +1789,7 @@ def process_inv(
     """
     Generate multiscale genome interaction predictions for 
     an inversion variant. 
+
     Parameters
     ----------
     mchr : str
@@ -1806,6 +1825,7 @@ def process_inv(
         extracted from the padding_chr.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
+
     Returns
     -------
     outputs_ref_l, outputs_ref_r, outputs_alt_l, outputs_alt_r : dict, dict, dict, dict
@@ -2120,6 +2140,7 @@ def process_ins(
     Generate multiscale genome interaction predictions for 
     an insertion variant that inserts the specified sequence 
     to the insertion site. 
+
     Parameters
     ----------
     mchr : str
@@ -2155,6 +2176,7 @@ def process_ins(
         extracted from the padding_chr.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
+
     Returns
     -------
     outputs_ref, outputs_alt_l, outputs_alt_r : dict, dict, dict
@@ -2432,6 +2454,7 @@ def process_custom(
     """
     Generate multiscale genome interaction predictions for 
     a custom variant by an ordered list of genomic segments.
+
     Parameters
     ----------
     region_list : list(list(...))
@@ -2480,6 +2503,7 @@ def process_custom(
         Default is 16000000. Currently only 16000000 (32Mb window) is accepted.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
+
     Returns
     -------
     outputs_ref_l, outputs_ref_r, outputs_alt : dict, dict, dict
@@ -2614,6 +2638,7 @@ def process_single_breakpoint(
     the breakpoint is used. For example, for an input 
     ('chr1', 85691449, 'chr5', 89533745 '+', '+'), two plus signs
     indicate connecting chr1:0-85691449 with chr5:0-89533745.
+
     Parameters
     ----------
     chr1 : str
@@ -2659,6 +2684,7 @@ def process_single_breakpoint(
         extracted from the padding_chr.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
+
     Returns
     -------
     outputs_ref_1, outputs_ref_2, outputs_alt : dict, dict, dict
@@ -2948,12 +2974,14 @@ if __name__ == "__main__":
 
     doc = """
     Orca multiscale genome interaction sequence model prediction tool.
+
     Usage:
     orca_predict region [options] <coordinate> <output_dir>
     orca_predict del [options] <coordinate> <output_dir>
     orca_predict dup [options] <coordinate> <output_dir>
     orca_predict inv [options] <coordinate> <output_dir>
     orca_predict break [options] <coordinate> <output_dir>
+
     Options:
     -h --help        Show this screen.
     --show_genes     Show gene annotation (only supported for 32Mb models).
