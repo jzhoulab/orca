@@ -414,10 +414,19 @@ def genomepredict(
                             axis=2,
                         )
                         target_r[target_nan > nan_thresh] = np.nan
-                        target_np = np.log(
+                        
+
+                        if target_r.shape[0]==1:
+                            
+                            target_np = np.log(
                             (target_r + model.epss[level])
-                            / (model.normmats[level] + model.epss[level])
-                        )[0, 0:, 0:]
+                            / (model.normmats[level] + model.epss[level]))[0, :, :]
+                        else:
+                            
+                            target_np = np.log(
+                            (target_r + model.epss[level])
+                            / (model.normmats[level] + model.epss[level]))
+                        
                         ts.append(target_np)
 
                     if annotation is not None and iii == 0:
@@ -755,7 +764,12 @@ def genomepredict_256Mb(
                         )
                         target_r[target_nan > nan_thresh] = np.nan
                         eps = np.nanmin(normmat_r)
-                        target_np = np.log((target_r + eps) / (normmat_r + eps))[0, 0:, 0:]
+                        
+                        if target_r.shape[0]==1:
+                            target_np = np.log((target_r + eps) / (normmat_r + eps))[0, :, :]
+                        else:
+                            target_np = np.log((target_r + eps) / (normmat_r + eps))
+                        
                         ts.append(target_np)
 
                     if annotation is not None and iii == 0:
@@ -3175,4 +3189,3 @@ if __name__ == "__main__":
         return None
 
     get_interactions(predtype, arguments["<coordinate>"], arguments["<output_dir>"])
-
