@@ -414,10 +414,19 @@ def genomepredict(
                             axis=2,
                         )
                         target_r[target_nan > nan_thresh] = np.nan
-                        target_np = np.log(
+                        
+
+                        if target_r.shape[0]==1:
+                            
+                            target_np = np.log(
                             (target_r + model.epss[level])
-                            / (model.normmats[level] + model.epss[level])
-                        )[0, 0:, 0:]
+                            / (model.normmats[level] + model.epss[level]))[0, :, :]
+                        else:
+                            
+                            target_np = np.log(
+                            (target_r + model.epss[level])
+                            / (model.normmats[level] + model.epss[level]))
+                        
                         ts.append(target_np)
 
                     if annotation is not None and iii == 0:
@@ -755,7 +764,12 @@ def genomepredict_256Mb(
                         )
                         target_r[target_nan > nan_thresh] = np.nan
                         eps = np.nanmin(normmat_r)
-                        target_np = np.log((target_r + eps) / (normmat_r + eps))[0, 0:, 0:]
+                        
+                        if target_r.shape[0]==1:
+                            target_np = np.log((target_r + eps) / (normmat_r + eps))[0, :, :]
+                        else:
+                            target_np = np.log((target_r + eps) / (normmat_r + eps))
+                        
                         ts.append(target_np)
 
                     if annotation is not None and iii == 0:
@@ -1064,7 +1078,7 @@ def process_region(
     elif window_radius == 128000000:
         chrlen_round = chrlen - chrlen % 32000
         wpos = 128000000
-        if has_target:
+        if target:
             sequence, normmats, targets = _retrieve_multi(
                 [[mchr, 0, chrlen_round, "+"], [padding_chr, 0, 256000000 - chrlen_round, "+"]],
                 genome,
@@ -3012,14 +3026,13 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         sys.argv.append("-h")
     arguments = docopt(doc, version="Orca v0.1")
-    print(arguments)
     show_genes = arguments["--show_genes"]
     show_tracks = arguments["--show_tracks"]
     window_radius = 128000000 if arguments["--256m"] else 16000000
     use_cuda = not arguments["--nocuda"]
     coor_filename = arguments["--coor_filename"]
 
-    load_resources(models=["32M"], use_cuda=use_cuda)
+    load_resources(models=["256M" if arguments["--256m"] else "32M"], use_cuda=use_cuda)
 
     if arguments["region"]:
         predtype = "region"
@@ -3208,4 +3221,3 @@ if __name__ == "__main__":
         return None
 
     get_interactions(predtype, arguments["<coordinate>"], arguments["<output_dir>"])
-

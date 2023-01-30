@@ -5,7 +5,7 @@
 
 # Orca
 
-This repository contains code for Orca, a deep learning sequence modeling framework for multiscale genome structure prediction. Orca can **predict genome interactions from kilobase to whole-chromosome-scales** using only genomic sequence as input.  The manuscript is available [here](https://www.biorxiv.org/content/10.1101/2021.05.19.444847v1).
+This repository contains code for Orca, a deep learning sequence modeling framework for multiscale genome structure prediction. Orca can **predict genome interactions from kilobase to whole-chromosome-scales** using only genomic sequence as input.  The manuscript is now published [here](https://www.nature.com/articles/s41588-022-01065-4).
 
 This is our main repository for Orca, including code for applying Orca models or training new models. For reproducing the analyses in our manuscript,  please visit our manuscript [repository](https://github.com/jzhoulab/orca_manuscript).  A GPU-backed webserver for running the core functionalities of Orca is also available at: [orca.zhoulab.io](https://orca.zhoulab.io).
 
@@ -61,11 +61,17 @@ You can use Orca through either the command-line-interface (CLI) which supports 
 
 For using Orca from python, you can just add the directory you cloned to your python PATH `sys.path.append(ORCA_PATH)` and use it (for now we haven't made Orca a python package, because most of its functionalities depends on the resource files which is rather large).  The full API documentation is available [here](http://jzhoulab.github.io/orca-docs/).
 
+To use Orca for any prediciton tasks, the first step is to load the models. The following scripts load the Orca models (32Mb and 256Mb).  
+
 ```python
 import orca_predict
 #Default is using GPU. Set use_cuda = False in load_resources to use CPU.
 orca_predict.load_resources(models=['32M', '256M'])
-#import loaded resources
+```
+
+For predicting multiscale 3D genome effects of simple structural variants, here are some examples:
+
+```python
 from orca_predict import *
 
 #duplication variant
@@ -108,10 +114,10 @@ from selene_sdk.sequences import Genome
 #mpos: specifies the coordinate to zoom into for multiscale prediction
 #wpos: specifies the coordinate of the center position of the sequence. 
 #chrom: chromosome name
-outputs = genomepredict(Genome.sequence_to_encoding(sequence), chrom, mpos=pos, wpos=wpos, use_cuda=True)
+outputs = genomepredict(Genome.sequence_to_encoding(sequence)[None,:,:], chrom, mpos=pos, wpos=wpos, use_cuda=True)
 
 #For 256Mb sequence. See the docs for details of the input 
-outputs = genomepredict_256Mb(Genome.sequence_to_encoding(sequence), chrom, normmats, chrlen, mpos=pos, wpos=wpos, use_cuda=True)
+outputs = genomepredict_256Mb(Genome.sequence_to_encoding(sequence)[None,:,:], chrom, normmats, chrlen, mpos=pos, wpos=wpos, use_cuda=True)
 ```
 
 For full information about using Orca,  you may visit our API documentation page (http://jzhoulab.github.io/orca-docs/).
@@ -165,6 +171,21 @@ Example alternative sequence predictions for duplication variant (right boundary
 
 If you ask Orca to generate gene annotations or chromatin tracks,  you will also find annotation pdf outputs files which correspond to the same multi-level regions the genome interaction predictions are made on.
 
+Besides graphical output, we also save the numerical predictions in PyTorch serialization format (pickle) with extension '.pth'. The .pth file can be loaded with `torch.load` or other pickle file loading function. Each file contains a python dictionary. If the prediction mode is one of the structural variant prediction modes, the dictionary stores multiple dictionaries each corresponding to an output file as described above. The dictionary includes:
+
+`predictions` - Multi-level predictions for H1-ESC and HFF cell types.
+
+`experiments` - Observations for H1-ESC and HFF cell types that matches the predictions (only available for reference allele).
+
+`chr` - The chromosome name
+
+`start_coords` - Start coordinates for the prediction at each level.
+
+`end_coords` - End coordinates for the prediction at each level.
+
+`annos` - Annotation information. A list indicating the relative variant positions for each interaction matrix, saved for plotting purpose.
+
+
 ### Train Orca models
 
 If you have set up Orca with its dependencies and has the necessary GPU resources (we have only done training on 4x V100 32Gb servers), you can train new models following the example code under the `train` directory to train new Orca models.  
@@ -182,5 +203,6 @@ You can access these datasets with 4DN accession IDs 4DNFI9GMP2J8 (H1-ESC;  Krie
 It depends on your application. If you only need predictions for a few variants,  or if you only need the 1Mb model, CPU may be enough. If you need to predict more than a couple dozens of variants, then GPU is highly recommended (>8GB RAM needed).
 
 
+
 ### Questions and feedbacks
-Thank you very much for using Orca. If you have any question or feedback, you can let us know at orca-user@googlegroups.com. If you found a bug, you can file a Github issue with details for reproducing the bug.
+Thank you very much for using Orca. If you have any question or feedback, you can let us know at orca-user@googlegroups.com. If you found a bug, you can file a Github issue with details for reproducing the bug. Orca is completely free for any non-commercial and academic use, please contact us for other applications.
