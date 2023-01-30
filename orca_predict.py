@@ -2028,7 +2028,7 @@ def process_inv(
         )
         if file is not None:
             genomeplot_256Mb(
-                outputs_ref_r, show_coordinates=True, model_labels=model_labels, model_labels=model_labels, file=file + ".ref.r.256m.pdf",
+                outputs_ref_r, show_coordinates=True, model_labels=model_labels, file=file + ".ref.r.256m.pdf",
             )
 
     # alt.l
