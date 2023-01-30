@@ -16,6 +16,7 @@ import pyfaidx
 from cooltools.lib.numutils import adaptive_coarsegrain
 import cooler
 import pyranges
+import torch
 
 from torch.utils.data import DataLoader
 import torch.utils.data as data
@@ -265,12 +266,210 @@ class MemmapGenome(Genome):
         encoding = self.get_encoding_from_coords(chrom, start, end, strand=strand, pad=strand)
         return encoding.T, np.any(encoding[0, :] == 0.25)
 
+def adaptive_coarsegrain_gpu(ar, countar, cutoff=5, max_levels=8, min_shape=8):
+    """
+    Adaptively coarsegrain a Hi-C matrix based on local neighborhood pooling
+    of counts.
 
-def _adaptive_coarsegrain(ar, countar, max_levels=12):
+    Parameters
+    ----------
+    ar : torch.Tensor, shape (n, n)
+        A square Hi-C matrix to coarsegrain. Usually this would be a balanced
+        matrix.
+
+    countar : torch.Tensor, shape (n, n)
+        The raw count matrix for the same area. Has to be the same shape as the
+        Hi-C matrix.
+
+    cutoff : float, optional
+        A minimum number of raw counts per pixel required to stop 2x2 pooling.
+        Larger cutoff values would lead to a more coarse-grained, but smoother
+        map. 3 is a good default value for display purposes, could be lowered
+        to 1 or 2 to make the map less pixelated. Setting it to 1 will only
+        ensure there are no zeros in the map.
+
+    max_levels : int, optional
+        How many levels of coarsening to perform. It is safe to keep this
+        number large as very coarsened map will have large counts and no
+        substitutions would be made at coarser levels.
+    min_shape : int, optional
+        Stop coarsegraining when coarsegrained array shape is less than that.
+
+    Returns
+    -------
+    Smoothed array, shape (n, n)
+
+    Notes
+    -----
+    The algorithm works as follows:
+
+    First, it pads an array with NaNs to the nearest power of two. Second, it
+    coarsens the array in powers of two until the size is less than minshape.
+
+    Third, it starts with the most coarsened array, and goes one level up.
+    It looks at all 4 pixels that make each pixel in the second-to-last
+    coarsened array. If the raw counts for any valid (non-NaN) pixel are less
+    than ``cutoff``, it replaces the values of the valid (4 or less) pixels
+    with the NaN-aware average. It is then applied to the next
+    (less coarsened) level until it reaches the original resolution.
+
+    In the resulting matrix, there are guaranteed to be no zeros, unless very
+    large zero-only areas were provided such that zeros were produced
+    ``max_levels`` times when coarsening.
+
+    Examples
+    --------
+    >>> c = cooler.Cooler("/path/to/some/cooler/at/about/2000bp/resolution")
+
+    >>> # sample region of about 6000x6000
+    >>> mat = c.matrix(balance=True).fetch("chr1:10000000-22000000")
+    >>> mat_raw = c.matrix(balance=False).fetch("chr1:10000000-22000000")
+    >>> mat_cg = adaptive_coarsegrain(mat, mat_raw)
+
+    >>> plt.figure(figsize=(16,7))
+    >>> ax = plt.subplot(121)
+    >>> plt.imshow(np.log(mat), vmax=-3)
+    >>> plt.colorbar()
+    >>> plt.subplot(122, sharex=ax, sharey=ax)
+    >>> plt.imshow(np.log(mat_cg), vmax=-3)
+    >>> plt.colorbar()
+
+    """
+    #TODO: do this better without sideeffect
+    torch.set_default_tensor_type(torch.cuda.FloatTensor)
+    with torch.no_grad():
+        def _coarsen(ar, operation=torch.sum, min_nan=False):
+            """Coarsegrains an array by a factor of 2"""
+            M = ar.shape[0] // 2
+            newar = ar.reshape(M, 2, M, 2)
+            if min_nan:
+                newar = torch.nan_to_num(newar,nan=float('inf'))
+                cg = operation(newar, axis=1)[0]
+                cg = operation(cg, axis=2)[0]
+            else:
+                cg = operation(newar, axis=1)
+                cg = operation(cg, axis=2)
+            return cg
+
+        def _expand(ar, counts=None):
+            """
+            Performs an inverse of nancoarsen
+            """
+            N = ar.shape[0] * 2
+            newar = torch.zeros((N, N),dtype=ar.dtype)
+            newar[::2, ::2] = ar
+            newar[1::2, ::2] = ar
+            newar[::2, 1::2] = ar
+            newar[1::2, 1::2] = ar
+            return newar
+
+        # defining arrays, making sure they are floats
+    #     ar = np.asarray(ar, float)
+    #     ar = torch.from_numpy(ar)
+    #     countar = np.asarray(countar, float)
+    #     countar = torch.from_numpy(countar)
+        # TODO: change this to the nearest shape correctly counting the smallest
+        # shape the algorithm will reach
+        Norig = ar.shape[0]
+        Nlog = np.log2(Norig)
+        if not np.allclose(Nlog, np.rint(Nlog)):
+            newN = np.int(2 ** np.ceil(Nlog))  # next power-of-two sized matrix
+            newar = torch.empty((newN, newN), dtype=torch.float)  # fitting things in there
+            newar[:] = np.nan
+            newcountar = torch.zeros((newN, newN), dtype=torch.float)
+            newar[:Norig, :Norig] = torch.from_numpy(ar)
+            newcountar[:Norig, :Norig] = torch.from_numpy(countar)
+            ar = newar
+            countar = newcountar
+
+        armask = torch.isfinite(ar)  # mask of "valid" elements
+        countar[~armask] = 0
+        ar[~armask] = 0
+
+        assert torch.isfinite(countar).all()
+        assert countar.shape == ar.shape
+
+        # We will be working with three arrays.
+        ar_cg = [ar]  # actual Hi-C data
+        countar_cg = [countar]  # counts contributing to Hi-C data (raw Hi-C reads)
+        armask_cg = [armask]  # mask of "valid" pixels of the heatmap
+
+        # 1. Forward pass: coarsegrain all 3 arrays
+        for i in range(max_levels):
+            if countar_cg[-1].shape[0] > min_shape:
+                countar_cg.append(_coarsen(countar_cg[-1]))
+                armask_cg.append(_coarsen(armask_cg[-1]))
+                ar_cg.append(_coarsen(ar_cg[-1]))
+
+        # Get the most coarsegrained array
+        ar_cur = ar_cg.pop()
+        countar_cur = countar_cg.pop()
+        armask_cur = armask_cg.pop()
+
+        # 2. Reverse pass: replace values starting with most coarsegrained array
+        # We have 4 pixels that were coarsegrained to one pixel.
+        # Let V be the array of values (ar), and C be the array of counts of
+        # valid pixels. Then the coarsegrained values and valid pixel counts
+        # are:
+        # V_{cg} = V_{0,0} + V_{0,1} + V_{1,0} + V_{1,1}
+        # C_{cg} = C_{0,0} + C_{0,1} + C_{1,0} + C_{1,1}
+        # The average value at the coarser level is V_{cg} / C_{cg}
+        # The average value at the finer level is V_{0,0} / C_{0,0}, etc.
+        #
+        # We would replace 4 values with the average if counts for either of the
+        # 4 values are less than cutoff. To this end, we perform nanmin of raw
+        # Hi-C counts in each 4 pixels
+        # Because if counts are 0 due to this pixel being invalid - it's fine.
+        # But if they are 0 in a valid pixel - we replace this pixel.
+        # If we decide to replace the current 2x2 square with coarsegrained
+        # values, we need to make it produce the same average value
+        # To this end, we would replace V_{0,0} with V_{cg} * C_{0,0} / C_{cg} and
+        # so on.
+        for i in range(len(countar_cg)):
+            ar_next = ar_cg.pop()
+            countar_next = countar_cg.pop()
+            armask_next = armask_cg.pop()
+
+            # obtain current "average" value by dividing sum by the # of valid pixels
+            val_cur = ar_cur / armask_cur
+            # expand it so that it is the same shape as the previous level
+            val_exp = _expand(val_cur)
+            # create array of substitutions: multiply average value by counts
+            addar_exp = val_exp * armask_next
+
+            # make a copy of the raw Hi-C array at current level
+            countar_next_mask = countar_next.clone()
+            countar_next_mask[armask_next == 0] = np.nan  # fill nans
+     
+            countar_exp = _expand(_coarsen(countar_next, operation=torch.min,min_nan=True))
+
+            curmask = countar_exp < cutoff  # replacement mask
+            ar_next[curmask] = addar_exp[curmask]  # procedure of replacement
+            ar_next[armask_next == 0] = 0  # now setting zeros at invalid pixels
+
+            # prepare for the next level
+            ar_cur = ar_next
+            countar_cur = countar_next
+            armask_cur = armask_next
+
+        ar_next[armask_next == 0] = np.nan
+        ar_next = ar_next[:Norig, :Norig]
+        torch.set_default_tensor_type(torch.FloatTensor)
+        return ar_next.detach().cpu().numpy()
+
+
+def _adaptive_coarsegrain(ar, countar, max_levels=12, cuda=False):
     """
     Wrapper for cooltools adaptive coarse-graining to add support 
     for non-square input for interchromosomal predictions.
     """
+    global adaptive_coarsegrain_fn
+    if cuda:
+        adaptive_coarsegrain_fn = adaptive_coarsegrain_gpu
+    else:
+        adaptive_coarsegrain_fn = adaptive_coarsegrain
+
+
     assert np.all(ar.shape == countar.shape)
     if ar.shape[0] < 9 and ar.shape[1] < 9:
         ar_padded = np.empty((9, 9))
@@ -280,22 +479,22 @@ def _adaptive_coarsegrain(ar, countar, max_levels=12):
         countar_padded = np.empty((9, 9))
         countar_padded.fill(np.nan)
         countar_padded[: countar.shape[0], : countar.shape[1]] = countar
-        return adaptive_coarsegrain(ar_padded, countar_padded, max_levels=max_levels)[
+        return adaptive_coarsegrain_fn(ar_padded, countar_padded, max_levels=max_levels)[
             : ar.shape[0], : ar.shape[1]
         ]
 
     if ar.shape[0] == ar.shape[1]:
-        return adaptive_coarsegrain(ar, countar, max_levels=max_levels)
+        return adaptive_coarsegrain_fn(ar, countar, max_levels=max_levels)
     elif ar.shape[0] > ar.shape[1]:
         padding = np.empty((ar.shape[0], ar.shape[0] - ar.shape[1]))
         padding.fill(np.nan)
-        return adaptive_coarsegrain(
+        return adaptive_coarsegrain_fn(
             np.hstack([ar, padding]), np.hstack([countar, padding]), max_levels=max_levels
         )[:, : ar.shape[1]]
     elif ar.shape[0] < ar.shape[1]:
         padding = np.empty((ar.shape[1] - ar.shape[0], ar.shape[1]))
         padding.fill(np.nan)
-        return adaptive_coarsegrain(
+        return adaptive_coarsegrain_fn(
             np.vstack([ar, padding]), np.vstack([countar, padding]), max_levels=max_levels
         )[: ar.shape[0], :]
 
@@ -331,10 +530,12 @@ class Genomic2DFeatures(Target):
         The shape of the output array (# of bins by # of bins).
     cg : bool
         Whether adpative coarse-graining is applied to the output.
-
+    cuda : bool
+        Whether to use cuda for adaptive coarsegraining. Fast but requires
+        a lot of GPU memory.
     """
 
-    def __init__(self, input_paths, features, shape, cg=False):
+    def __init__(self, input_paths, features, shape, cg=False, cuda=False):
         """
         Constructs a new `Genomic2DFeatures` object.
         """
@@ -349,6 +550,7 @@ class Genomic2DFeatures(Target):
         self.feature_index_dict = dict([(feat, index) for index, feat in enumerate(features)])
         self.shape = shape
         self.cg = cg
+        self.cuda = cuda
 
     def get_feature_data(self, chrom, start, end, chrom2=None, start2=None, end2=None):
         if not self._initialized:
@@ -364,7 +566,7 @@ class Genomic2DFeatures(Target):
         if self.cg:
             out = [
                 _adaptive_coarsegrain(
-                    c.matrix(balance=True).fetch(*query), c.matrix(balance=False).fetch(*query)
+                    c.matrix(balance=True).fetch(*query), c.matrix(balance=False).fetch(*query), cuda=self.cuda
                 ).astype(np.float32)
                 for c in self.data
             ]
