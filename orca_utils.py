@@ -130,11 +130,15 @@ def genomeplot(
     if unscaled_cmap is None:
         unscaled_cmap = hnh_cmap_ext5
 
+    if output["predictions"][0][0].ndim == 3:
+        predictions = []
+        for modeli in range(len(output["predictions"])):
+            ndims = output["predictions"][modeli][0].shape[0]
+            predictions += [[output['predictions'][modeli][i][j] for i in range(6)] for j in range(ndims)]
+        output["predictions"] = predictions
+
     n_axes = len(output["predictions"]) 
-    try:
-        assert output["predictions"][0][0].ndim == 2
-    except:
-        raise ValueError("Plotting predictions with more than two-dimensions are not supported.")
+
     if output["experiments"] is not None:
         n_axes += len(output["predictions"])
 
@@ -591,11 +595,13 @@ def genomeplot_256Mb(
     if unscaled_cmap is None:
         unscaled_cmap = hnh_cmap_ext5
 
+    if output["predictions"][0][0].ndim == 3:
+        predictions = []
+        for modeli in range(len(output["predictions"])):
+            ndims = output["predictions"][modeli][0].shape[0]
+            predictions += [[output['predictions'][modeli][i][j] for i in range(6)] for j in range(ndims)]
+        output["predictions"] = predictions
     n_axes = len(output["predictions"]) 
-    try:
-        assert output["predictions"][0][0].ndim == 2
-    except:
-        raise ValueError("Plotting predictions with more than two-dimensions are not supported.")
     if output["experiments"] is not None:
         n_axes += len(output["predictions"])
 
