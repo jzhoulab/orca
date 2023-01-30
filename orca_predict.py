@@ -959,6 +959,7 @@ def process_region(
     show_tracks=False,
     window_radius=16000000,
     padding_chr="chr1",
+    model_labels=None,
     use_cuda=True,
 ):
     """
@@ -998,6 +999,8 @@ def process_region(
         Default is "chr1". If window_radius is 128000000, padding is generally 
         needed to fill the sequence to 256Mb. The padding sequence will be 
         extracted from the padding_chr.
+    model_labels : list(str) or None, optional
+        Model names. This should be provided when custom model is used.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
 
@@ -1115,7 +1118,7 @@ def process_region(
     if file is not None:
         if window_radius == 128000000:
             genomeplot_256Mb(
-                outputs_ref, show_coordinates=True, file=file + ".256m.pdf",
+                outputs_ref, show_coordinates=True, model_labels=model_labels, file=file + ".256m.pdf",
             )
         else:
             genomeplot(
@@ -1123,6 +1126,7 @@ def process_region(
                 show_genes=show_genes,
                 show_tracks=show_tracks,
                 show_coordinates=True,
+                model_labels=model_labels,
                 file=file + ".pdf",
             )
     return outputs_ref
@@ -1140,6 +1144,7 @@ def process_dup(
     show_tracks=False,
     window_radius=16000000,
     padding_chr="chr1",
+    model_labels=None,
     use_cuda=True,
 ):
     """
@@ -1179,6 +1184,8 @@ def process_dup(
         Default is "chr1". If window_radius is 128000000, padding is generally 
         needed to fill the sequence to 256Mb. The padding sequence will be 
         extracted from the padding_chr.
+    model_labels : list(str) or None, optional
+        Model names. This should be provided when custom model is used.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
 
@@ -1297,7 +1304,7 @@ def process_dup(
     if file is not None:
         if window_radius == 128000000:
             genomeplot_256Mb(
-                outputs_ref_l, show_coordinates=True, file=file + ".ref.l.256m.pdf",
+                outputs_ref_l, show_coordinates=True, model_labels=model_labels, file=file + ".ref.l.256m.pdf",
             )
         else:
             genomeplot(
@@ -1305,6 +1312,7 @@ def process_dup(
                 show_genes=show_genes,
                 show_tracks=show_tracks,
                 show_coordinates=True,
+                model_labels=model_labels,
                 file=file + ".ref.l.pdf",
             )
 
@@ -1346,6 +1354,7 @@ def process_dup(
                 show_genes=show_genes,
                 show_tracks=show_tracks,
                 show_coordinates=True,
+                model_labels=model_labels,
                 file=file + ".ref.r.pdf",
             )
     else:
@@ -1363,7 +1372,7 @@ def process_dup(
             use_cuda=use_cuda,
         )
         genomeplot_256Mb(
-            outputs_ref_r, show_coordinates=True, file=file + ".ref.r.256m.pdf",
+            outputs_ref_r, show_coordinates=True, model_labels=model_labels, file=file + ".ref.r.256m.pdf",
         )
 
     # alt (r)
@@ -1435,7 +1444,7 @@ def process_dup(
             sequence, mchr, mend, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
-            genomeplot(outputs_alt, show_coordinates=True, file=file + ".alt.pdf")
+            genomeplot(outputs_alt, show_coordinates=True, model_labels=model_labels, file=file + ".alt.pdf")
     else:
         outputs_alt = genomepredict_256Mb(
             sequence,
@@ -1451,7 +1460,7 @@ def process_dup(
         )
         if file is not None:
             genomeplot_256Mb(
-                outputs_alt, show_coordinates=True, file=file + ".alt.256m.pdf",
+                outputs_alt, show_coordinates=True, model_labels=model_labels, file=file + ".alt.256m.pdf",
             )
 
     return outputs_ref_l, outputs_ref_r, outputs_alt
@@ -1470,6 +1479,7 @@ def process_del(
     show_tracks=False,
     window_radius=16000000,
     padding_chr="chr1",
+    model_labels=None,
     use_cuda=True,
 ):
     """
@@ -1509,6 +1519,8 @@ def process_del(
         Default is "chr1". If window_radius is 128000000, padding is generally 
         needed to fill the sequence to 256Mb. The padding sequence will be 
         extracted from the padding_chr.
+    model_labels : list(str) or None, optional
+        Model names. This should be provided when custom model is used.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
 
@@ -1626,7 +1638,7 @@ def process_del(
     if file is not None:
         if window_radius == 128000000:
             genomeplot_256Mb(
-                outputs_ref_l, show_coordinates=True, file=file + ".ref.l.256m.pdf",
+                outputs_ref_l, show_coordinates=True, model_labels=model_labels, file=file + ".ref.l.256m.pdf",
             )
         else:
             genomeplot(
@@ -1635,6 +1647,7 @@ def process_del(
                 show_tracks=show_tracks,
                 show_coordinates=True,
                 cmap=cmap,
+                model_labels=model_labels,
                 file=file + ".ref.l.pdf",
             )
 
@@ -1677,6 +1690,7 @@ def process_del(
                 show_tracks=show_tracks,
                 show_coordinates=True,
                 cmap=cmap,
+                model_labels=model_labels,
                 file=file + ".ref.r.pdf",
             )
     else:
@@ -1695,7 +1709,7 @@ def process_del(
         )
         if file is not None:
             genomeplot_256Mb(
-                outputs_ref_r, show_coordinates=True, file=file + ".ref.r.256m.pdf",
+                outputs_ref_r, show_coordinates=True, model_labels=model_labels, file=file + ".ref.r.256m.pdf",
             )
 
     # alt
@@ -1736,7 +1750,7 @@ def process_del(
             sequence, mchr, mstart, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
-            genomeplot(outputs_alt, show_coordinates=True, cmap=cmap, file=file + ".alt.pdf")
+            genomeplot(outputs_alt, show_coordinates=True, cmap=cmap, model_labels=model_labels, file=file + ".alt.pdf")
     else:
         outputs_alt = genomepredict_256Mb(
             sequence,
@@ -1752,7 +1766,7 @@ def process_del(
         )
         if file is not None:
             genomeplot_256Mb(
-                outputs_alt, show_coordinates=True, file=file + ".alt.256m.pdf",
+                outputs_alt, show_coordinates=True, model_labels=model_labels, file=file + ".alt.256m.pdf",
             )
 
     return outputs_ref_l, outputs_ref_r, outputs_alt
@@ -1770,6 +1784,7 @@ def process_inv(
     show_tracks=False,
     window_radius=16000000,
     padding_chr="chr1",
+    model_labels=None,
     use_cuda=True,
 ):
     """
@@ -1809,6 +1824,8 @@ def process_inv(
         Default is "chr1". If window_radius is 128000000, padding is generally 
         needed to fill the sequence to 256Mb. The padding sequence will be 
         extracted from the padding_chr.
+    model_labels : list(str) or None, optional
+        Model names. This should be provided when custom model is used.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
 
@@ -1928,7 +1945,7 @@ def process_inv(
     if file is not None:
         if window_radius == 128000000:
             genomeplot_256Mb(
-                outputs_ref_l, show_coordinates=True, file=file + ".ref.l.256m.pdf",
+                outputs_ref_l, show_coordinates=True, model_labels=model_labels, file=file + ".ref.l.256m.pdf",
             )
         else:
             genomeplot(
@@ -1936,6 +1953,7 @@ def process_inv(
                 show_genes=show_genes,
                 show_tracks=show_tracks,
                 show_coordinates=True,
+                model_labels=model_labels,
                 file=file + ".ref.l.pdf",
             )
 
@@ -1977,6 +1995,7 @@ def process_inv(
                 show_genes=show_genes,
                 show_tracks=show_tracks,
                 show_coordinates=True,
+                model_labels=model_labels,
                 file=file + ".ref.r.pdf",
             )
     else:
@@ -1995,7 +2014,7 @@ def process_inv(
         )
         if file is not None:
             genomeplot_256Mb(
-                outputs_ref_r, show_coordinates=True, file=file + ".ref.r.256m.pdf",
+                outputs_ref_r, show_coordinates=True, model_labels=model_labels, model_labels=model_labels, file=file + ".ref.r.256m.pdf",
             )
 
     # alt.l
@@ -2039,7 +2058,7 @@ def process_inv(
             sequence, mchr, mstart, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
-            genomeplot(outputs_alt_l, show_coordinates=True, file=file + ".alt.l.pdf")
+            genomeplot(outputs_alt_l, show_coordinates=True, model_labels=model_labels, file=file + ".alt.l.pdf")
     else:
         outputs_alt_l = genomepredict_256Mb(
             sequence,
@@ -2055,7 +2074,7 @@ def process_inv(
         )
         if file is not None:
             genomeplot_256Mb(
-                outputs_alt_l, show_coordinates=True, file=file + ".alt.l.256m.pdf",
+                outputs_alt_l, show_coordinates=True, model_labels=model_labels, file=file + ".alt.l.256m.pdf",
             )
 
     if window_radius == 16000000:
@@ -2085,7 +2104,7 @@ def process_inv(
             sequence, mchr, mend, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
-            genomeplot(outputs_alt_r, show_coordinates=True, file=file + ".alt.r.pdf")
+            genomeplot(outputs_alt_r, show_coordinates=True, model_labels=model_labels, file=file + ".alt.r.pdf")
     else:
         outputs_alt_r = genomepredict_256Mb(
             sequence,
@@ -2101,7 +2120,7 @@ def process_inv(
         )
         if file is not None:
             genomeplot_256Mb(
-                outputs_alt_r, show_coordinates=True, file=file + ".alt.r.256m.pdf",
+                outputs_alt_r, show_coordinates=True, model_labels=model_labels, file=file + ".alt.r.256m.pdf",
             )
 
     return outputs_ref_l, outputs_ref_r, outputs_alt_l, outputs_alt_r
@@ -2120,6 +2139,7 @@ def process_ins(
     show_tracks=False,
     window_radius=16000000,
     padding_chr="chr1",
+    model_labels=None,
     use_cuda=True,
 ):
     """
@@ -2160,6 +2180,8 @@ def process_ins(
         Default is "chr1". If window_radius is 128000000, padding is generally 
         needed to fill the sequence to 256Mb. The padding sequence will be 
         extracted from the padding_chr.
+    model_labels : list(str) or None, optional
+        Model names. This should be provided when custom model is used.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
 
@@ -2266,7 +2288,7 @@ def process_ins(
     if file is not None:
         if window_radius == 128000000:
             genomeplot_256Mb(
-                outputs_ref_l, show_coordinates=True, file=file + ".ref.256m.pdf",
+                outputs_ref_l, show_coordinates=True, model_labels=model_labels, file=file + ".ref.256m.pdf",
             )
         else:
             genomeplot(
@@ -2274,6 +2296,7 @@ def process_ins(
                 show_genes=show_genes,
                 show_tracks=show_tracks,
                 show_coordinates=True,
+                model_labels=model_labels,
                 file=file + ".ref.pdf",
             )
 
@@ -2337,7 +2360,7 @@ def process_ins(
             sequence, mchr, mpos, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
-            genomeplot(outputs_alt_l, show_coordinates=True, file=file + ".alt.l.pdf")
+            genomeplot(outputs_alt_l, show_coordinates=True, model_labels=model_labels, file=file + ".alt.l.pdf")
     else:
         outputs_alt_l = genomepredict_256Mb(
             sequence,
@@ -2353,7 +2376,7 @@ def process_ins(
         )
         if file is not None:
             genomeplot_256Mb(
-                outputs_alt_l, show_coordinates=True, file=file + ".alt.l.256m.pdf",
+                outputs_alt_l, show_coordinates=True, model_labels=model_labels, file=file + ".alt.l.256m.pdf",
             )
 
     if window_radius == 16000000:
@@ -2399,7 +2422,7 @@ def process_ins(
             sequence, mchr, mpos + len(ins_seq), wpos, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
-            genomeplot(outputs_alt_r, show_coordinates=True, file=file + ".alt.r.pdf")
+            genomeplot(outputs_alt_r, show_coordinates=True, model_labels=model_labels, file=file + ".alt.r.pdf")
     else:
         outputs_alt = genomepredict_256Mb(
             sequence,
@@ -2415,7 +2438,7 @@ def process_ins(
         )
         if file is not None:
             genomeplot_256Mb(
-                outputs_alt, show_coordinates=True, file=file + ".alt.r.256m.pdf",
+                outputs_alt, show_coordinates=True, model_labels=model_labels, file=file + ".alt.r.256m.pdf",
             )
 
     return outputs_ref, outputs_alt_l, outputs_alt_r
@@ -2435,6 +2458,7 @@ def process_custom(
     show_genes=True,
     show_tracks=False,
     window_radius=16000000,
+    model_labels=None,
     use_cuda=True,
 ):
     """
@@ -2487,6 +2511,8 @@ def process_custom(
         file in pdf format that matches the windows of multiscale predictions.
     window_radius : int, optional
         Default is 16000000. Currently only 16000000 (32Mb window) is accepted.
+    model_labels : list(str) or None, optional
+        Model names. This should be provided when custom model is used.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
 
@@ -2574,6 +2600,7 @@ def process_custom(
                 show_genes=show_genes,
                 show_tracks=show_tracks,
                 show_coordinates=True,
+                model_labels=model_labels,
                 file=file + ".ref." + str(i) + ".pdf",
             )
 
@@ -2593,7 +2620,7 @@ def process_custom(
         alt_sequence, "chimeric", mpos, window_radius, models=models, annotation=anno_scaled, use_cuda=use_cuda,
     )
     if file is not None:
-        genomeplot(outputs_alt, show_coordinates=False, file=file + ".alt.pdf")
+        genomeplot(outputs_alt, show_coordinates=False, model_labels=model_labels, file=file + ".alt.pdf")
     return outputs_ref, outputs_alt
 
 
@@ -2612,6 +2639,7 @@ def process_single_breakpoint(
     show_tracks=False,
     window_radius=16000000,
     padding_chr="chr1",
+    model_labels=None,
     use_cuda=True,
 ):
     """
@@ -2668,6 +2696,8 @@ def process_single_breakpoint(
         Default is "chr1". If window_radius is 128000000, padding is generally 
         needed to fill the sequence to 256Mb. The padding sequence will be 
         extracted from the padding_chr.
+    model_labels : list(str) or None, optional
+        Model names. This should be provided when custom model is used.
     use_cuda : bool, optional
         Default is True. Use CPU if False.
 
@@ -2770,7 +2800,7 @@ def process_single_breakpoint(
     if file is not None:
         if window_radius == 128000000:
             genomeplot_256Mb(
-                outputs_ref_1, show_coordinates=True, file=file + ".ref.1.256m.pdf",
+                outputs_ref_1, show_coordinates=True, model_labels=model_labels, file=file + ".ref.1.256m.pdf",
             )
         else:
             genomeplot(
@@ -2778,6 +2808,7 @@ def process_single_breakpoint(
                 show_genes=show_genes,
                 show_tracks=show_tracks,
                 show_coordinates=True,
+                model_labels=model_labels,
                 file=file + ".ref.1.pdf",
                 colorbar=True,
             )
@@ -2842,7 +2873,7 @@ def process_single_breakpoint(
     if file is not None:
         if window_radius == 128000000:
             genomeplot_256Mb(
-                outputs_ref_2, show_coordinates=True, file=file + ".ref.2.256m.pdf",
+                outputs_ref_2, show_coordinates=True, model_labels=model_labels, file=file + ".ref.2.256m.pdf",
             )
         else:
             genomeplot(
@@ -2850,6 +2881,7 @@ def process_single_breakpoint(
                 show_genes=show_genes,
                 show_tracks=show_tracks,
                 show_coordinates=True,
+                model_labels=model_labels,
                 file=file + ".ref.2.pdf",
                 colorbar=True,
             )
@@ -2931,7 +2963,7 @@ def process_single_breakpoint(
             sequence, chr1 + "|" + chr2, breakpos, wpos, models=models, annotation=anno_scaled, use_cuda=use_cuda
         )
         if file is not None:
-            genomeplot(outputs_alt, show_coordinates=False, file=file + ".alt.pdf", colorbar=True)
+            genomeplot(outputs_alt, show_coordinates=False, model_labels=model_labels, file=file + ".alt.pdf", colorbar=True)
     else:
         outputs_alt = genomepredict_256Mb(
             sequence,
@@ -2947,7 +2979,7 @@ def process_single_breakpoint(
         )
         if file is not None:
             genomeplot_256Mb(
-                outputs_alt, show_coordinates=True, file=file + ".alt.256m.pdf",
+                outputs_alt, show_coordinates=True, model_labels=model_labels, file=file + ".alt.256m.pdf",
             )
     return outputs_ref_1, outputs_ref_2, outputs_alt
 
