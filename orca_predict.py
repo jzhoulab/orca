@@ -95,7 +95,7 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
 
  
 """
-    global hg38, target_hff, target_h1esc, target_hff_256m, target_h1esc_256m, target_hff_1m, target_h1esc_1m, target_available
+    global hg38, hg19, target_hff, target_h1esc, target_hff_256m, target_h1esc_256m, target_hff_1m, target_h1esc_1m, target_available
 
     if "32M" in models or "32m" in models:
         global h1esc, hff
@@ -150,11 +150,25 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
             input_path=ORCA_PATH + "/resources/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
             memmapfile=ORCA_PATH + "/resources/Homo_sapiens.GRCh38.dna.primary_assembly.fa.mmap",
         )
+        if os.path.exists('/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa'):
+            hg19 = MemmapGenome(
+                input_path=ORCA_PATH + "/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa",
+                memmapfile=ORCA_PATH + "/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.mmap",
+            )
+        else:
+            hg19 = None
+        
     else:
         hg38 = Genome(
             input_path=ORCA_PATH + "/resources/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
         )
-
+        if os.path.exists('/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa'):
+            hg19 = Genome(
+                input_path=ORCA_PATH + "/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa",
+            )
+        else:
+            hg19 = None
+            
     target_available = True
     if os.path.exists(ORCA_PATH + "/resources/4DNFI643OYP9.rebinned.mcool"):
         target_hff = Genomic2DFeatures(
