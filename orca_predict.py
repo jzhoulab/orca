@@ -150,7 +150,7 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
             input_path=ORCA_PATH + "/resources/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
             memmapfile=ORCA_PATH + "/resources/Homo_sapiens.GRCh38.dna.primary_assembly.fa.mmap",
         )
-        if os.path.exists('/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa'):
+        if os.path.exists(ORCA_PATH + '/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa'):
             hg19 = MemmapGenome(
                 input_path=ORCA_PATH + "/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa",
                 memmapfile=ORCA_PATH + "/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.mmap",
@@ -162,7 +162,7 @@ def load_resources(models=["32M"], use_cuda=True, use_memmapgenome=True):
         hg38 = Genome(
             input_path=ORCA_PATH + "/resources/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
         )
-        if os.path.exists('/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa'):
+        if os.path.exists(ORCA_PATH + '/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa'):
             hg19 = Genome(
                 input_path=ORCA_PATH + "/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa",
             )
