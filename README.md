@@ -205,4 +205,4 @@ It depends on your application. If you only need predictions for a few variants,
 
 
 ### Questions and feedbacks
-Thank you very much for using Orca. If you have any question or feedback, you can let us know at orca-user@googlegroups.com. If you found a bug, you can file a Github issue with details for reproducing the bug. Orca is completely free for any non-commercial and academic use, please contact us for other applications.
+Thank you very much for using Orca. If you have any question or feedback, you can let us know at the [orca-users Google group](https://groups.google.com/g/orca-users). If you found a bug, you can file a Github issue with details for reproducing the bug. Orca is completely free for any non-commercial and academic use, please contact us for other applications.
