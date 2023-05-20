@@ -185,6 +185,23 @@ Besides graphical output, we also save the numerical predictions in PyTorch seri
 
 `annos` - Annotation information. A list indicating the relative variant positions for each interaction matrix, saved for plotting purpose.
 
+### Orca-1Mb model
+
+If you are running a larger scale virtural screen that focus mostly on  <1Mb structures, Orca-1Mb model offers better speed. Orca-1Mb can be used with the following code
+
+```
+import orca_predict
+orca_predict.load_resources(models=["1M"])
+from orca_predict import *
+sequence = hg38.get_encoding_from_coords(chrm, start, start + 1000000)[None, :, :]
+def pred_1m(seq, model):
+    pred = model(seq.transpose(1, 2))
+    return pred
+    
+#change h1esc_1m to hff_1m if you want to use HFF model 
+pred = pred_1m(torch.FloatTensor(sequence).cuda(), h1esc_1m).squeeze().detach().cpu().numpy()
+```
+
 
 ### Train Orca models
 
