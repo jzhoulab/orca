@@ -238,7 +238,7 @@ def genomepredict(
     Parameters
     ----------
     sequence : numpy.ndarray
-        One-hot sequence encoding of shape 1 x 4 x 32000000. 
+        One-hot sequence encoding of shape 1 x 32000000 x 4. 
         The encoding can be generated with `selene_sdk.Genome.sequence_to_encoding()`.
     mchr : str
         Chromosome name. This is used for annotation purpose only.
@@ -562,7 +562,7 @@ def genomepredict_256Mb(
     Parameters
     ----------
     sequence : numpy.ndarray
-        One-hot sequence encoding of shape 1 x 4 x 256000000. 
+        One-hot sequence encoding of shape 1 x 256000000 x 4. 
         The encoding can be generated with `selene_sdk.Genome.sequence_to_encoding()`.
     mchr : str
         The chromosome name of the first chromosome included in the seqeunce. 
