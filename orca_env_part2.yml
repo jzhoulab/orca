@@ -1,0 +1,18 @@
+name: orca_env
+channels:
+  - annaconda
+  - bioconda
+  - defaults
+dependencies: 
+  - scikit-learn
+  - pandas
+  - matplotlib
+  - pygenometracks
+  - tqdm
+  - pyranges
+  - pybigwig
+  - docopt
+  - statsmodels
+  - pytabix
+  - plotly
+  - seaborn

@@ -1,0 +1,11 @@
+name: orca_env
+channels:
+  - annaconda
+  - bioconda
+  - defaults
+  - conda-forge
+dependencies: 
+  - python=3.9
+  - gcc
+  - cooltools
+  - cython
