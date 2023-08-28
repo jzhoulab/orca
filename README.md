@@ -26,20 +26,36 @@ Orca is a deep learning sequence modeling framework for multiscale genome intera
 ### Get started 
 If you just need predictions for one or a handful of variants, we have provided the core functionalities on a web server: [orca.zhoulab.io](https://orca.zhoulab.io). 
 
-#### Installation
-For running Orca locally,  clone this repository with the following 
-command.
+### Install and run Orca locally
+
+#### Pre-requisites: Python environment and Selene library.
+
+1. orca_env Python environment
+
+    The enviornment setup involves 3 steps, install (1) Python 3.9, (2) Pytorch, and (3) the remaining packages.
+    This is to save time for conda to solve the dependency for Pytorch.
+
+  - Install [conda/miniconda](https://docs.conda.io/en/latest/miniconda.html) if you don't have it already.
+  - Create the environment from the orca_env_part1.yml file: `conda env create -f orca_env_part1.yml`
+  - Activate the environment: `conda activate orca_env`
+  - Install Pytorch following the [Pytorch installation guide](https://pytorch.org/get-started/locally/), choose the appropriate parameters (CPU or GPU, OS, etc.) for your system.
+  - Install the remaining packages: `conda env update -f orca_env_part2.yml`
+
+2. Install Selene (under the orca_env environment)
+  ```bash
+  git clone https://github.com/kathyxchen/selene.git
+  cd selene
+  git checkout custom_target_support
+  python setup.py build_ext --inplace
+  python setup.py install 
+  ```
+
+Now you are ready to run Orca locally, with the orca repository cloned and resource files downloaded.
+
+#### Clone the Orca repository
 ```bash
 git clone https://github.com/jzhoulab/orca.git
 cd orca
-```
-Install python dependencies of Orca and Selene.  You can set up a conda env with `conda env create -f orca_env.yml` or install these packages manually to your environment.  Then,  install pytorch(>=1.7.0) according to [here](https://pytorch.org/get-started/locally/ ).  Finally, install Selene with the commands below - right now we depend on a development branch of Selene with added support for custom targets:  
-```bash
-git clone https://github.com/kathyxchen/selene.git
-cd selene
-git checkout custom_target_support
-python setup.py build_ext --inplace
-python setup.py install 
 ```
 #### Download model and relevant resource files
 Next, download the model and other resource files needed by Orca. Because these files are large and some are optional, we packaged into several files and you can download what you need (some functionalities may not be available if the relevant files are not downloaded).  

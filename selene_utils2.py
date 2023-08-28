@@ -137,6 +137,11 @@ class MemmapGenome(Genome):
                     ] = encoding.T
                 if self.memmapfile is not None:
                     # create memmap file
+                    print("Creating memmap...\n" +
+                        "This may take a while (e.g. ~hours for human genome).\n" + 
+                        "If the process is interrupted or killed, the .mmap file will be incorrect,\n" + 
+                        "in which case, delete the mmap file and try again."
+                    )
                     mmap = np.memmap(
                         self.memmapfile, dtype="float32", mode="w+", shape=self.sequence_data.shape
                     )
