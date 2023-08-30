@@ -31,6 +31,11 @@ from orca_utils import (
     coord_clip,
 )
 
+try:
+    from seqstr import seqstr
+except ImportError:
+    seqstr = None
+
 ORCA_PATH = str(pathlib.Path(__file__).parent.absolute())
 model_dict_global, target_dict_global = {}, {}
 
@@ -1000,7 +1005,7 @@ def process_region(
         The chromosome name of the first segment
     mstart : int
         The start coordinate of the region.
-    mend : ind
+    mend : int
         The end coordinate of the region.
     genome : selene_utils2.MemmapGenome or selene_sdk.sequences.Genome
         The reference genome object to extract sequence from
@@ -3010,6 +3015,105 @@ def process_single_breakpoint(
                 outputs_alt, show_coordinates=True, model_labels=model_labels, file=file + ".alt.256m.pdf",
             )
     return outputs_ref_1, outputs_ref_2, outputs_alt
+
+
+def process_seqstr(
+	seqstr_input,
+    file=None,
+    mpos=None,
+    custom_models=None,
+    use_cuda=True,
+):
+    """
+	Similar to process_region, predict multiscale interaction
+	for given genome region (32Mb long),
+	but take Seqstring as input, seqstr should be one line
+
+    Seqstr repo: https://github.com/jzhoulab/Seqstr
+    pip install -i https://test.pypi.org/simple/ seqstr
+	
+	Seqstr input examples:
+    '[hg38]chr9:94904000-126904000'
+    '[hg38]chr9:94904000-100904000 +; chr7:5480600-32480600 -'
+
+    Parameters
+    ----------
+    seqstr_input : str
+        Seqstr input, one line.
+    file (optional) : str
+        Output file name.
+    mpos (optional) : int
+        Position of the sequence to zoom in, 
+        default is the middle of the sequence (16Mb from the start of seq).
+    custom_models (optional) : list(torch.nn.Module or str)
+        Custom models to use, default is ["h1esc", "hff"] for 32Mb.
+    use_cuda (optional) : bool
+        Whether to use GPU, default is True.
+    
+    Returns
+    -------
+    outputs_ref : dict
+        Dictionary of multiscale interaction predictions.
+        Can be used as input for genomeplot.
+        Keys: predictions, experiments, normmats, start_coords, end_coords, chr, annos.
+
+    """
+    # do nothing if seqstr is not installed 
+    if seqstr is None:
+        raise ImportError(
+            "Seqstr is not installed. Please install it first.\n" 
+            + "pip install -i https://test.pypi.org/simple/ seqstr"
+        )
+
+    # extract the sequence string (seqstrout) from input
+    seqstrout = seqstr(seqstr_input)
+    # take the first input if multiple inputs
+    sequence_str = seqstrout[0].Seq
+
+    # the middle position of the sequence
+    midpoint = int(len(sequence_str) / 2)
+
+    # check sequence string length
+    if midpoint < 16000000:
+        raise ValueError(
+            "Sequence length needs to be at least 32Mb long.\n" 
+            + " Current length is " + str(len(sequence_str))
+        )
+    elif midpoint > 16000000: # chop from both end so the sequence is 32Mb long
+        print("Sequence length is longer than 32Mb. Only the middle 32Mb will be used.")
+        sequence_str = sequence_str[midpoint - 16000000 : midpoint + 16000000]
+    
+    midpoint = int(len(sequence_str) / 2) # update midpoint after chopping
+
+	# 32Mb models, unless user sets custom models
+    if custom_models is None:
+        models = ["h1esc", "hff"]
+    else:
+        models = custom_models
+
+    # set center wpos and zoom in mpos
+    wpos = midpoint # center of the sequence
+    if mpos is None:
+        mpos = midpoint # zoom in middle if not specified
+    
+    # chromosome name
+    mchr = "customized seq"
+
+    # get encoding of sequence
+    sequence = Genome.sequence_to_encoding(sequence_str)[None, :, :]
+
+    outputs_ref = genomepredict(sequence, mchr, mpos, wpos, models=models, targets=False, use_cuda=use_cuda)
+
+    if file is not None:
+        genomeplot(
+            outputs_ref,
+            show_genes=False,
+            show_tracks=False,
+            show_coordinates=True,
+            file=file + ".pdf",
+        )
+
+    return outputs_ref
 
 
 if __name__ == "__main__":
