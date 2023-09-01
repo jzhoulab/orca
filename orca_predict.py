@@ -3018,7 +3018,7 @@ def process_single_breakpoint(
 
 
 def process_seqstr(
-	seqstr_input,
+    seqstr_input,
     file=None,
     mpos=None,
     custom_models=None,
