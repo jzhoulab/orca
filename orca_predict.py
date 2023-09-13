@@ -3022,18 +3022,19 @@ def process_seqstr(
     file=None,
     mpos=None,
     custom_models=None,
+    model_labels=None,
     use_cuda=True,
 ):
     """
-	Similar to process_region, predict multiscale interaction
+    Similar to process_region, predict multiscale interaction
 	for given genome region (32Mb long),
 	but take Seqstring as input, seqstr should be one line
 
     Seqstr repo: https://github.com/jzhoulab/Seqstr
     pip install -i https://test.pypi.org/simple/ seqstr
 	
-	Seqstr input examples:
-    '[hg38]chr9:94904000-126904000'
+    Seqstr input examples:
+    '[hg38]chr9:94904000-126904000 +'
     '[hg38]chr9:94904000-100904000 +; chr7:5480600-32480600 -'
 
     Parameters
@@ -3047,6 +3048,8 @@ def process_seqstr(
         default is the middle of the sequence (16Mb from the start of seq).
     custom_models (optional) : list(torch.nn.Module or str)
         Custom models to use, default is ["h1esc", "hff"] for 32Mb.
+    model_labels (optional) : list(str)
+        when using custom models, provide model names.
     use_cuda (optional) : bool
         Whether to use GPU, default is True.
     
@@ -3088,8 +3091,10 @@ def process_seqstr(
 	# 32Mb models, unless user sets custom models
     if custom_models is None:
         models = ["h1esc", "hff"]
+        model_labels = ["H1-ESC", "HFF"]
     else:
         models = custom_models
+        model_labels = model_labels
 
     # set center wpos and zoom in mpos
     wpos = midpoint # center of the sequence
@@ -3111,6 +3116,7 @@ def process_seqstr(
             show_tracks=False,
             show_coordinates=True,
             file=file + ".pdf",
+            model_labels=model_labels,
         )
 
     return outputs_ref
