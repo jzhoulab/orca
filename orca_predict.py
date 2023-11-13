@@ -1056,6 +1056,7 @@ def process_region(
     mpos = int((int(mstart) + int(mend)) / 2)
 
     if custom_models is None:
+        model_labels = ["H1-ESC", "HFF"]
         if window_radius == 16000000:
             models = ["h1esc", "hff"]
         elif window_radius == 128000000:
@@ -1066,6 +1067,9 @@ def process_region(
             )
     else:
         models = custom_models
+        # initiate custom model labels if not provided
+        if model_labels is None: 
+            model_labels = [f'Model {i}' for i in range(len(models))]
 
     if target:
         try:
@@ -1239,6 +1243,7 @@ def process_dup(
     chrlen = [l for c, l in genome.get_chr_lens() if c == mchr].pop()
 
     if custom_models is None:
+        model_labels = ["H1-ESC", "HFF"]
         if window_radius == 16000000:
             models = ["h1esc", "hff"]
         elif window_radius == 128000000:
@@ -1249,6 +1254,9 @@ def process_dup(
             )
     else:
         models = custom_models
+        # initiate custom model labels if not provided
+        if model_labels is None:
+            model_labels = [f'Model {i}' for i in range(len(models))]
 
     if target:
         try:
@@ -1574,6 +1582,7 @@ def process_del(
     chrlen = [l for c, l in genome.get_chr_lens() if c == mchr].pop()
 
     if custom_models is None:
+        model_labels = ["H1-ESC", "HFF"]
         if window_radius == 16000000:
             models = ["h1esc", "hff"]
         elif window_radius == 128000000:
@@ -1584,6 +1593,9 @@ def process_del(
             )
     else:
         models = custom_models
+        # initiate custom model labels if not provided
+        if model_labels is None:
+            model_labels = [f'Model {i}' for i in range(len(models))]
 
     if target:
         try:
@@ -1882,6 +1894,7 @@ def process_inv(
     chrlen = [l for c, l in genome.get_chr_lens() if c == mchr].pop()
 
     if custom_models is None:
+        model_labels = ["H1-ESC", "HFF"]
         if window_radius == 16000000:
             models = ["h1esc", "hff"]
         elif window_radius == 128000000:
@@ -1892,6 +1905,9 @@ def process_inv(
             )
     else:
         models = custom_models
+        # initiate custom model labels if not provided
+        if model_labels is None:
+            model_labels = [f'Model {i}' for i in range(len(models))]
 
     if target:
         try:
@@ -2235,6 +2251,7 @@ def process_ins(
     chrlen = [l for c, l in genome.get_chr_lens() if c == mchr].pop()
 
     if custom_models is None:
+        model_labels = ["H1-ESC", "HFF"]
         if window_radius == 16000000:
             models = ["h1esc", "hff"]
         elif window_radius == 128000000:
@@ -2245,6 +2262,9 @@ def process_ins(
             )
     else:
         models = custom_models
+        # initiate custom model labels if not provided
+        if model_labels is None:
+            model_labels = [f'Model {i}' for i in range(len(models))]
 
     if target:
         try:
@@ -2565,6 +2585,7 @@ def process_custom(
         
     """
     if custom_models is None:
+        model_labels = ["H1-ESC", "HFF"]
         if window_radius == 16000000:
             models = ["h1esc", "hff"]
         elif window_radius == 128000000:
@@ -2575,6 +2596,9 @@ def process_custom(
             )
     else:
         models = custom_models
+        # initiate custom model labels if not provided
+        if model_labels is None:
+            model_labels = [f'Model {i}' for i in range(len(models))]
 
     if target:
         try:
@@ -2748,6 +2772,7 @@ def process_single_breakpoint(
     """
 
     if custom_models is None:
+        model_labels = ["H1-ESC", "HFF"]
         if window_radius == 16000000:
             models = ["h1esc", "hff"]
         elif window_radius == 128000000:
@@ -2758,6 +2783,9 @@ def process_single_breakpoint(
             )
     else:
         models = custom_models
+        # initiate custom model labels if not provided
+        if model_labels is None:
+            model_labels = [f'Model {i}' for i in range(len(models))]
 
     if target:
         try:
@@ -3031,7 +3059,7 @@ def process_seqstr(
 	but take Seqstring as input, seqstr should be one line
 
     Seqstr repo: https://github.com/jzhoulab/Seqstr
-    pip install -i https://test.pypi.org/simple/ seqstr
+    pip install seqstr
 	
     Seqstr input examples:
     '[hg38]chr9:94904000-126904000 +'
@@ -3065,7 +3093,7 @@ def process_seqstr(
     if seqstr is None:
         raise ImportError(
             "Seqstr is not installed. Please install it first.\n" 
-            + "pip install -i https://test.pypi.org/simple/ seqstr"
+            + "pip install seqstr"
         )
 
     # extract the sequence string (seqstrout) from input
@@ -3095,6 +3123,9 @@ def process_seqstr(
     else:
         models = custom_models
         model_labels = model_labels
+        # initiate custom model labels if not provided
+        if model_labels is None:
+            model_labels = [f'Model {i}' for i in range(len(models))]
 
     # set center wpos and zoom in mpos
     wpos = midpoint # center of the sequence

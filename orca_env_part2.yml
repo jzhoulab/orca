@@ -16,3 +16,6 @@ dependencies:
   - pytabix
   - plotly
   - seaborn
+  - pip
+  - pip:
+    - seqstr
