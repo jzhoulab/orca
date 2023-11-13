@@ -3059,7 +3059,7 @@ def process_seqstr(
 	but take Seqstring as input, seqstr should be one line
 
     Seqstr repo: https://github.com/jzhoulab/Seqstr
-    pip install -i https://test.pypi.org/simple/ seqstr
+    pip install seqstr
 	
     Seqstr input examples:
     '[hg38]chr9:94904000-126904000 +'
@@ -3093,7 +3093,7 @@ def process_seqstr(
     if seqstr is None:
         raise ImportError(
             "Seqstr is not installed. Please install it first.\n" 
-            + "pip install -i https://test.pypi.org/simple/ seqstr"
+            + "pip install seqstr"
         )
 
     # extract the sequence string (seqstrout) from input
