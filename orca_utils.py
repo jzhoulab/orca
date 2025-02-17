@@ -878,7 +878,7 @@ class StructuralChange2(object):
         the specified interval in the mutated genome.
         """
         ind_s = bisect(self.coord_points, start) - 1
-        ind_e = bisect(self.coord_points, end)
+        ind_e = bisect(self.coord_points, end - 1)
 
         ref_coords = [deepcopy(seg.ref) for seg in self.segments[ind_s:ind_e]]
 
@@ -898,10 +898,14 @@ class StructuralChange2(object):
                     ref_coords[0].strand,
                 )
 
+        # when start out of bounds
+        if ind_s < 0:
+            raise ValueError(f"Warning: query start {start} exceed limit {self.coord_points[0]}!")
+
         # when end exceeds length
         if ind_e == len(self.coord_points):
             if end > self.coord_points[-1]:
-                print(f"Warning: query end {end} exceed limit {self.coord_points[-1]}!")
+                raise ValueError(f"Warning: query end {end} exceed limit {self.coord_points[-1]}!")
         else:
             if ref_coords[-1]:
                 if ref_coords[-1].strand == "+":

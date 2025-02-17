@@ -2967,12 +2967,18 @@ def process_single_breakpoint(
     s = s + s2
 
     if window_radius == 16000000:
-        wpos = coord_clip(breakpos, s.coord_points[-1])
+        if s.coord_points[-1] < 2 * window_radius + 128000: # chromosome is not long enough, 128k is the blocksize in coord_clip
+            adjusted_radius = s.coord_points[-1] // 2
+            wpos = adjusted_radius
+        else: 
+            adjusted_radius = window_radius
+            wpos = coord_clip(breakpos, s.coord_points[-1], window_radius = adjusted_radius )
 
         sequence = []
         curpos = 0
         anno = []
-        for chrm, start, end, strand in s[wpos - window_radius : wpos + window_radius]:
+
+        for chrm, start, end, strand in s[wpos - adjusted_radius : wpos + adjusted_radius]:
             seq = genome.get_encoding_from_coords(chrm, start, end)
             if strand == "-":
                 seq = seq[None, ::-1, ::-1]
@@ -2982,6 +2988,11 @@ def process_single_breakpoint(
             anno.append([curpos, curpos + end - start])
             curpos = curpos + end - start
         sequence = np.concatenate(sequence, axis=1)
+
+        if sequence.shape[1] != 32000000:
+            pad_len = 32000000 - sequence.shape[1]
+            sequence = np.concatenate((sequence, np.full((1, pad_len, 4), 0.25)), axis=1 )
+        
     else:
         chrlen_alt_round = s.coord_points[-1] - s.coord_points[-1] % 32000
         if chrlen_alt_round < 256000000:
