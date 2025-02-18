@@ -2992,6 +2992,7 @@ def process_single_breakpoint(
         if sequence.shape[1] != 32000000:
             pad_len = 32000000 - sequence.shape[1]
             sequence = np.concatenate((sequence, np.full((1, pad_len, 4), 0.25)), axis=1 )
+            wpos = wpos + pad_len // 2
         
     else:
         chrlen_alt_round = s.coord_points[-1] - s.coord_points[-1] % 32000
