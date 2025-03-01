@@ -1628,8 +1628,8 @@ class OrcaLeukemiaA(nn.Module):
     def __init__(self,):
         super().__init__()
 
-        normmat_files = ['./resources/GSE134761_TALL_all.hg38.no_filter.1000.mcool.expected.res4000.npy',
-            './resources/THP1.hg38.no_filter.1000.mcool.expected.res4000.npy']
+        normmat_files = [ORCA_PATH + '/resources/GSE134761_TALL_all.hg38.no_filter.1000.mcool.expected.res4000.npy',
+            ORCA_PATH + '/resources/THP1.hg38.no_filter.1000.mcool.expected.res4000.npy']
 
         n_files = len(normmat_files)
 
@@ -1651,17 +1651,17 @@ class OrcaLeukemiaA(nn.Module):
         self.denet_8 = nn.DataParallel(Decoder(n_files))
         self.denet_16 = nn.DataParallel(Decoder(n_files))
         self.denet_32 = nn.DataParallel(Decoder(n_files))
-        self.net.load_state_dict(torch.load("./models/orca_leukemiaA.net.statedict"))
-        self.denet_1.load_state_dict(torch.load("./models/orca_leukemiaA.d1.statedict"))
-        self.denet_2.load_state_dict(torch.load("./models/orca_leukemiaA.d2.statedict"))
-        self.denet_4.load_state_dict(torch.load("./models/orca_leukemiaA.d4.statedict"))
-        self.denet_8.load_state_dict(torch.load("./models/orca_leukemiaA.d8.statedict"))
-        self.denet_16.load_state_dict(torch.load("./models/orca_leukemiaA.d16.statedict"))
-        self.denet_32.load_state_dict(torch.load("./models/orca_leukemiaA.d32.statedict"))
+        self.net.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaA.net.statedict"))
+        self.denet_1.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaA.d1.statedict"))
+        self.denet_2.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaA.d2.statedict"))
+        self.denet_4.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaA.d4.statedict"))
+        self.denet_8.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaA.d8.statedict"))
+        self.denet_16.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaA.d16.statedict"))
+        self.denet_32.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaA.d32.statedict"))
 
         self.net0 = nn.DataParallel(Encoder())
         net0_dict = self.net0.state_dict()
-        pretrained_dict = torch.load("./models/orca_leukemiaA.net0.statedict")
+        pretrained_dict = torch.load(ORCA_PATH + "/models/orca_leukemiaA.net0.statedict")
         pretrained_dict_filtered = {key: pretrained_dict[key] for key in net0_dict}
         self.net0.load_state_dict(pretrained_dict_filtered)
         for param in self.net0.parameters():
@@ -1669,7 +1669,7 @@ class OrcaLeukemiaA(nn.Module):
 
         self.denet_1_pt = nn.DataParallel(Decoder_1m(n_files))
         self.denet_1_pt_dict = self.denet_1_pt.state_dict()
-        pretrained_dict = torch.load("./models/orca_leukemiaA.net0.statedict")
+        pretrained_dict = torch.load(ORCA_PATH + "/models/orca_leukemiaA.net0.statedict")
         pretrained_dict_filtered = {key: pretrained_dict[key] for key in self.denet_1_pt_dict}
         self.denet_1_pt.load_state_dict(pretrained_dict_filtered)
         for param in self.denet_1_pt.parameters():
@@ -1760,12 +1760,12 @@ class OrcaLeukemiaB(nn.Module):
     def __init__(self,):
         super().__init__()
 
-        normmat_files = ['./resources/4DNFIXP4QG5B.mcool.rebinned.mcool.expected.res4000.npy',
-            './resources/NALM6.hg38.no_filter.1000.mcool.expected.res4000.npy',
-            './resources/GSE146901_T_ALL_NonETP.hg38.no_filter.1000.mcool.expected.res4000.npy',
-            './resources/GSE146901_T_ALL_ETP.hg38.no_filter.1000.mcool.expected.res4000.npy',
-            './resources/GSE63525_K562.hg38.no_filter.1000.mcool.expected.res4000.npy',
-            './resources/GSE63525_KBM7.hg38.no_filter.1000.mcool.expected.res4000.npy']
+        normmat_files = [ORCA_PATH + '/resources/4DNFIXP4QG5B.mcool.rebinned.mcool.expected.res4000.npy',
+            ORCA_PATH + '/resources/NALM6.hg38.no_filter.1000.mcool.expected.res4000.npy',
+            ORCA_PATH + '/resources/GSE146901_T_ALL_NonETP.hg38.no_filter.1000.mcool.expected.res4000.npy',
+            ORCA_PATH + '/resources/GSE146901_T_ALL_ETP.hg38.no_filter.1000.mcool.expected.res4000.npy',
+            ORCA_PATH + '/resources/GSE63525_K562.hg38.no_filter.1000.mcool.expected.res4000.npy',
+            ORCA_PATH + '/resources/GSE63525_KBM7.hg38.no_filter.1000.mcool.expected.res4000.npy']
 
         n_files = len(normmat_files)
 
@@ -1787,17 +1787,17 @@ class OrcaLeukemiaB(nn.Module):
         self.denet_8 = nn.DataParallel(Decoder(n_files))
         self.denet_16 = nn.DataParallel(Decoder(n_files))
         self.denet_32 = nn.DataParallel(Decoder(n_files))
-        self.net.load_state_dict(torch.load("./models/orca_leukemiaB.net.statedict"))
-        self.denet_1.load_state_dict(torch.load("./models/orca_leukemiaB.d1.statedict"))
-        self.denet_2.load_state_dict(torch.load("./models/orca_leukemiaB.d2.statedict"))
-        self.denet_4.load_state_dict(torch.load("./models/orca_leukemiaB.d4.statedict"))
-        self.denet_8.load_state_dict(torch.load("./models/orca_leukemiaB.d8.statedict"))
-        self.denet_16.load_state_dict(torch.load("./models/orca_leukemiaB.d16.statedict"))
-        self.denet_32.load_state_dict(torch.load("./models/orca_leukemiaB.d32.statedict"))
+        self.net.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaB.net.statedict"))
+        self.denet_1.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaB.d1.statedict"))
+        self.denet_2.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaB.d2.statedict"))
+        self.denet_4.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaB.d4.statedict"))
+        self.denet_8.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaB.d8.statedict"))
+        self.denet_16.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaB.d16.statedict"))
+        self.denet_32.load_state_dict(torch.load(ORCA_PATH + "/models/orca_leukemiaB.d32.statedict"))
 
         self.net0 = nn.DataParallel(Encoder())
         net0_dict = self.net0.state_dict()
-        pretrained_dict = torch.load("./models/orca_leukemiaB.net0.statedict")
+        pretrained_dict = torch.load(ORCA_PATH + "/models/orca_leukemiaB.net0.statedict")
         pretrained_dict_filtered = {key: pretrained_dict[key] for key in net0_dict}
         self.net0.load_state_dict(pretrained_dict_filtered)
         for param in self.net0.parameters():
@@ -1805,7 +1805,7 @@ class OrcaLeukemiaB(nn.Module):
 
         self.denet_1_pt = nn.DataParallel(Decoder_1m(n_files))
         self.denet_1_pt_dict = self.denet_1_pt.state_dict()
-        pretrained_dict = torch.load("./models/orca_leukemiaB.net0.statedict")
+        pretrained_dict = torch.load(ORCA_PATH + "/models/orca_leukemiaB.net0.statedict")
         pretrained_dict_filtered = {key: pretrained_dict[key] for key in self.denet_1_pt_dict}
         self.denet_1_pt.load_state_dict(pretrained_dict_filtered)
         for param in self.denet_1_pt.parameters():
